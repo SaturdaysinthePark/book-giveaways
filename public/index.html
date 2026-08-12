@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Book Giveaways</title>
+<meta name="description" content="Every open Goodreads print book giveaway in one place, ranked by the odds you'll actually win. Search it, sort it, enter the ones worth the click.">
+<meta name="theme-color" content="#2F4BFF">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EFEFEC;
+  --ink:#101014;
+  --accent:#2F4BFF;
+  --ochre:#A8761B;
+  --rust:#B03A2A;
+  --muted:#6E7076;
+  --faint:#8A8C90;
+  --line:#C9C9C2;
+  --tile:#E2E2DC;
+  --sans:Archivo,Helvetica,Arial,sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+}
+
+html,body{margin:0;padding:0;background:#EFEFEC;}
+*{box-sizing:border-box;}
+a{color:#101014;}
+a:hover{color:#2F4BFF;}
+input::placeholder{color:#8A8C90;}
+::selection{background:#2F4BFF;color:#EFEFEC;}
+body{
+  -webkit-font-smoothing:antialiased;
+  font-family:var(--sans);
+  color:var(--ink);
+  min-height:100vh;
+}
+
+/* ---------------------------------------------------------------- hero */
+.hero{
+  background:var(--accent);
+  padding:20px 28px 22px;
+  min-height:58vh;
+  display:flex;
+  flex-direction:column;
+}
+.hero-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.backlink{
+  color:var(--ink);
+  text-decoration:none;
+  padding:2px 0;
+  border-bottom:1px solid rgba(16,16,20,.35);
+}
+.backlink:hover{border-bottom-color:var(--ink);color:var(--ink);}
+
+.hero-mid{flex:1;display:flex;align-items:center;padding:44px 0 32px;}
+.hero-copy{display:flex;flex-direction:column;gap:26px;width:100%;}
+h1{
+  margin:0;
+  font-weight:600;
+  font-size:clamp(52px,12vw,168px);
+  line-height:.84;
+  letter-spacing:-.045em;
+  text-transform:uppercase;
+}
+.deck{
+  margin:0;
+  max-width:52ch;
+  font-size:clamp(15px,1.5vw,19px);
+  line-height:1.45;
+  font-weight:400;
+  text-wrap:pretty;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:1px;
+  background:rgba(16,16,20,.28);
+  border-top:1px solid rgba(16,16,20,.28);
+}
+.stat{
+  background:var(--accent);
+  padding:14px 0 2px 16px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.stat:first-child{padding-left:0;}
+.stat-label{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  opacity:.65;
+}
+.stat-value{
+  font-family:var(--mono);
+  font-size:clamp(20px,2.4vw,30px);
+  font-weight:500;
+  letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;
+}
+
+/* -------------------------------------------------------- control bar */
+.bar{
+  position:sticky;
+  top:0;
+  z-index:20;
+  background:var(--paper);
+  border-bottom:1px solid var(--ink);
+  padding:12px 28px 11px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:14px 22px;
+  align-items:center;
+}
+.search{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:1 1 240px;
+  min-width:200px;
+  border-bottom:1px solid var(--line);
+  padding-bottom:6px;
+}
+.search input{
+  flex:1;
+  border:0;
+  background:transparent;
+  outline:none;
+  font-family:var(--sans);
+  font-size:14px;
+  color:var(--ink);
+  padding:0;
+  min-width:0;
+}
+
+.sorts{display:flex;align-items:center;gap:2px;flex-wrap:wrap;}
+.sorts-label{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--faint);
+  margin-right:8px;
+}
+.sorts button{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  padding:6px 9px;
+  cursor:pointer;
+  border-radius:2px;
+}
+.sorts button:hover{background:var(--tile);}
+.sorts button[aria-pressed="true"],
+.sorts button[aria-pressed="true"]:hover{background:var(--ink);color:var(--paper);}
+
+.chips{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.chips button{
+  background:transparent;
+  color:var(--muted);
+  border:1px solid var(--line);
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  padding:6px 10px;
+  border-radius:999px;
+  cursor:pointer;
+}
+.chips button[aria-pressed="true"]{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:var(--paper);
+}
+
+/* ---------------------------------------------------------- meta line */
+.meta{
+  padding:14px 28px 6px;
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:16px;
+  flex-wrap:wrap;
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--faint);
+}
+.meta-right{display:flex;gap:16px;align-items:center;}
+.legend{display:flex;gap:12px;align-items:center;}
+.legend span{display:flex;gap:5px;align-items:center;}
+.legend i{width:9px;height:9px;display:block;border-radius:1px;}
+.treatment{
+  border:1px solid var(--line);
+  background:transparent;
+  color:var(--muted);
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  padding:5px 9px;
+  border-radius:2px;
+  cursor:pointer;
+}
+.treatment:hover{border-color:var(--ink);color:var(--ink);}
+
+/* --------------------------------------------------------------- grid */
+.grid{
+  padding:10px 28px 80px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(212px,1fr));
+  column-gap:22px;
+  row-gap:0;
+}
+.card{
+  display:grid;
+  grid-row:span 5;
+  grid-template-rows:subgrid;
+  row-gap:0;
+  align-content:start;
+}
+
+.cover{
+  position:relative;
+  display:block;
+  aspect-ratio:2/3;
+  background:var(--tile);
+  overflow:hidden;
+  text-decoration:none;
+}
+.cover img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+  filter:grayscale(1) contrast(1.08) brightness(1.04);
+}
+.tint{
+  position:absolute;
+  inset:0;
+  mix-blend-mode:color;
+  opacity:.9;
+  pointer-events:none;
+}
+.dither{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:.55;
+  background:repeating-linear-gradient(180deg,rgba(239,239,236,0) 0 1px,rgba(239,239,236,.85) 1px 2px);
+}
+body.plain .cover img{filter:none;}
+body.plain .tint,
+body.plain .dither{opacity:0;}
+
+.rank{
+  position:absolute;
+  top:0;
+  left:0;
+  color:var(--paper);
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:.08em;
+  padding:4px 7px;
+  font-variant-numeric:tabular-nums;
+}
+.nocover{
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  padding:14px;
+}
+.nocover-title{
+  font-family:var(--sans);
+  font-weight:600;
+  font-size:19px;
+  line-height:1.1;
+  color:var(--paper);
+  letter-spacing:-.02em;
+  text-wrap:pretty;
+  display:-webkit-box;
+  -webkit-line-clamp:3;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.nocover-tag{
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:rgba(239,239,236,.6);
+  margin-top:10px;
+}
+
+.title-wrap{
+  border-top:1px solid var(--ink);
+  padding-top:9px;
+  margin-top:11px;
+  align-self:start;
+}
+.title{
+  font-size:14.5px;
+  font-weight:500;
+  line-height:1.25;
+  letter-spacing:-.01em;
+  color:var(--ink);
+  text-decoration:none;
+  text-wrap:pretty;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.title:hover{color:var(--accent);}
+
+.author-wrap{align-self:start;padding-top:3px;}
+.author{font-size:12.5px;color:var(--muted);line-height:1.3;}
+
+.figures{
+  margin-top:11px;
+  align-self:start;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px 10px;
+  font-family:var(--mono);
+}
+.cell{display:flex;flex-direction:column;gap:2px;}
+.cell-label{
+  font-size:9px;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+  color:var(--faint);
+}
+.cell-value{font-size:12.5px;font-variant-numeric:tabular-nums;}
+.cell-odds{
+  font-size:17px;
+  font-weight:600;
+  letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;
+}
+
+.enter-wrap{margin-top:12px;padding-bottom:38px;align-self:end;}
+.enter{
+  display:block;
+  text-align:center;
+  border:1px solid var(--ink);
+  padding:8px 0;
+  font-family:var(--mono);
+  font-size:10.5px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--ink);
+  text-decoration:none;
+}
+.enter:hover{background:var(--ink);color:var(--paper);}
+
+.skeleton{aspect-ratio:2/3;background:var(--tile);margin-bottom:38px;}
+
+/* Older engines without subgrid: keep the grid aligned rather than ragged. */
+@supports not (grid-template-rows:subgrid){
+  .card{display:flex;flex-direction:column;grid-row:auto;}
+  .title-wrap{min-height:47px;}
+  .author-wrap{min-height:20px;}
+  .author{
+    display:-webkit-box;
+    -webkit-line-clamp:1;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .enter-wrap{margin-top:auto;}
+}
+
+/* ---------------------------------------------------- load more/empty */
+.more{
+  padding:0 28px 90px;
+  margin-top:-40px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+}
+.more-count{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--faint);
+}
+.more-buttons{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.btn-primary{
+  border:1px solid var(--ink);
+  background:transparent;
+  color:var(--ink);
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  padding:11px 22px;
+  cursor:pointer;
+}
+.btn-primary:hover{background:var(--ink);color:var(--paper);}
+.btn-secondary{
+  border:1px solid var(--line);
+  background:transparent;
+  color:var(--muted);
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  padding:11px 18px;
+  cursor:pointer;
+}
+.btn-secondary:hover{border-color:var(--ink);color:var(--ink);}
+
+.empty{
+  padding:60px 28px 100px;
+  text-align:center;
+  color:var(--muted);
+  font-size:15px;
+}
+
+/* ------------------------------------------------------------- footer */
+footer{
+  border-top:1px solid var(--ink);
+  margin:0 28px;
+  padding:22px 0 60px;
+  display:flex;
+  gap:28px;
+  flex-wrap:wrap;
+  justify-content:space-between;
+  font-family:var(--mono);
+  font-size:10.5px;
+  line-height:1.7;
+  color:var(--muted);
+}
+footer .note{max-width:62ch;}
+footer a{
+  color:var(--muted);
+  text-decoration:none;
+  border-bottom:1px solid var(--line);
+  height:fit-content;
+}
+footer a:hover{color:var(--ink);}
+
+/* --------------------------------------------------------- responsive */
+/* Below the width where four 140px stat cells fit, the strip wraps. Pin it to
+   2-up and keep the left column flush to the page gutter — the spec's
+   "first cell has no left padding" rule only covers the unwrapped case. */
+@media (max-width:619px){
+  .stats{grid-template-columns:repeat(2,1fr);}
+  .stat:nth-child(odd){padding-left:0;}
+}
+
+@media (max-width:640px){
+  .meta-right{display:none;}
+}
+@media (max-width:560px){
+  .search{flex:1 1 100%;}
+}
+
+/* The spec requires 2 columns on phones ("do not drop to 1 column"), but
+   auto-fill with a 212px floor needs 446px of content width and a 480px phone
+   only has 424px. Pin 2 columns below the width where auto-fill would give a
+   third anyway (700px), so the handoff between the two rules is seamless. */
+@media (max-width:700px){
+  .grid{grid-template-columns:repeat(2,1fr);}
+}
+
+@media (prefers-reduced-motion:no-preference){
+  .backlink,.title,.enter,.sorts button,.chips button,.treatment,
+  .btn-primary,.btn-secondary,footer a{
+    transition:background-color .12s linear,color .12s linear,border-color .12s linear;
+  }
+}
+
+[hidden]{display:none !important;}
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-top">
+    <a class="backlink" href="https://sabtainkhan.com">&larr; sabtainkhan.com</a>
+  </div>
+
+  <div class="hero-mid">
+    <div class="hero-copy">
+      <h1>Book Giveaways</h1>
+      <p class="deck">Every open Goodreads book giveaway in one place, ranked by the odds you'll actually win. Search it, sort it, enter the ones worth the click.</p>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-label">Open now</span>
+      <span class="stat-value" id="stat-count">&mdash;</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Copies on offer</span>
+      <span class="stat-value" id="stat-copies">&mdash;</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Best odds</span>
+      <span class="stat-value" id="stat-best">&mdash;</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Last update</span>
+      <span class="stat-value" id="stat-updated">&mdash;</span>
+    </div>
+  </div>
+</section>
+
+<div class="bar">
+  <div class="search">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8A8C90" stroke-width="2.4" aria-hidden="true" focusable="false">
+      <circle cx="11" cy="11" r="7"></circle>
+      <path d="M20 20l-4.2-4.2"></path>
+    </svg>
+    <input type="search" id="search" placeholder="Search title or author" aria-label="Search title or author" autocomplete="off">
+  </div>
+
+  <div class="sorts" id="sorts">
+    <span class="sorts-label" id="sorts-label">Sort</span>
+  </div>
+
+  <div class="chips" id="chips" role="group" aria-label="Filters"></div>
+</div>
+
+<div class="meta">
+  <span id="result-label"></span>
+  <div class="meta-right">
+    <div class="legend">
+      <span><i style="background:#2F4BFF"></i>Short odds</span>
+      <span><i style="background:#A8761B"></i>Middling</span>
+      <span><i style="background:#B03A2A"></i>Long shot</span>
+    </div>
+    <button class="treatment" id="treatment" aria-pressed="false">Full colour: off</button>
+  </div>
+</div>
+
+<div class="grid" id="grid" aria-busy="true"></div>
+
+<div class="more" id="more" hidden>
+  <span class="more-count" id="more-count"></span>
+  <div class="more-buttons">
+    <button class="btn-primary" id="load-more"></button>
+    <button class="btn-secondary" id="show-all"></button>
+  </div>
+</div>
+
+<div class="empty" id="empty" hidden></div>
+
+<footer>
+  <span class="note">Scraped from goodreads.com twice daily. Entrant counts are as of the last run, so treat odds as approximate &mdash; they move fast on popular titles. Entering is still a manual click on Goodreads; automated entries get disqualified under their terms.</span>
+  <a href="https://sabtainkhan.com">sabtainkhan.com</a>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var PAGE_SIZE = 60;
+  var ACCENT = "#2F4BFF", OCHRE = "#A8761B", RUST = "#B03A2A", INK = "#101014";
+
+  var SORTS = [
+    { key: "odds",    label: "Odds" },
+    { key: "ending",  label: "Ending" },
+    { key: "entries", label: "Entrants" },
+    { key: "copies",  label: "Copies" },
+    { key: "title",   label: "Title" },
+    { key: "author",  label: "Author" }
+  ];
+
+  var FILTERS = [
+    { key: "closing",    label: "Closing in 48h",        test: function (g) { return hoursLeft(g) <= 48; } },
+    { key: "longodds",   label: "Better than 1 in 500",  test: function (g) { return odds(g) <= 500; } },
+    { key: "manycopies", label: "10+ copies",            test: function (g) { return g.copies >= 10; } },
+    { key: "fresh",      label: "Under 2,000 entrants",  test: function (g) { return g.entries < 2000; } }
+  ];
+
+  var state = {
+    status: "loading",      // loading | ready | error
+    data: [],
+    updated: null,
+    q: "",
+    sort: "odds",
+    filters: [],
+    plain: false,
+    limit: PAGE_SIZE
+  };
+
+  var el = {
+    grid: document.getElementById("grid"),
+    more: document.getElementById("more"),
+    moreCount: document.getElementById("more-count"),
+    loadMore: document.getElementById("load-more"),
+    showAll: document.getElementById("show-all"),
+    empty: document.getElementById("empty"),
+    resultLabel: document.getElementById("result-label"),
+    search: document.getElementById("search"),
+    sorts: document.getElementById("sorts"),
+    chips: document.getElementById("chips"),
+    treatment: document.getElementById("treatment"),
+    statCount: document.getElementById("stat-count"),
+    statCopies: document.getElementById("stat-copies"),
+    statBest: document.getElementById("stat-best"),
+    statUpdated: document.getElementById("stat-updated")
+  };
+
+  /* ------------------------------------------------------------ derive */
+
+  function odds(g) {
+    if (!(g.copies > 0)) return Infinity;   // never seen in the data; don't divide by zero
+    return g.entries > 0 ? g.entries / g.copies : 1;
+  }
+
+  function hoursLeft(g) {
+    var end = new Date(g.endsAt || (g.ends + "T23:59:59Z"));
+    return (end - Date.now()) / 3.6e6;
+  }
+
+  function fmt(n) { return Number(n).toLocaleString("en-US"); }
+
+  function oddsLabel(o) { return isFinite(o) ? "1 in " + fmt(Math.round(o)) : "—"; }
+
+  function band(o) {
+    if (o <= 150) return ACCENT;
+    if (o <= 800) return OCHRE;
+    return RUST;
+  }
+
+  function clockLabel(h) {
+    if (h < 0) return "closed";
+    if (h < 24) return Math.max(1, Math.round(h)) + "h";
+    return Math.round(h / 24) + "d";
+  }
+
+  function thumb(url) {
+    if (!url) return null;
+    return url.replace(/(\.[a-z]{3,4})$/i, "._SX318_$1");
+  }
+
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function showUrl(g) { return "https://www.goodreads.com/giveaway/show/" + g.slug; }
+
+  /* ----------------------------------------------------------- pipeline */
+
+  var COMPARE = {
+    odds:    function (a, b) { return odds(a) - odds(b); },
+    ending:  function (a, b) { return hoursLeft(a) - hoursLeft(b); },
+    entries: function (a, b) { return a.entries - b.entries; },
+    copies:  function (a, b) { return b.copies - a.copies; },
+    title:   function (a, b) { return a.title.localeCompare(b.title); },
+    author:  function (a, b) { return a.author.localeCompare(b.author); }
+  };
+
+  function visible() {
+    var q = state.q.trim().toLowerCase();
+    var active = FILTERS.filter(function (f) { return state.filters.indexOf(f.key) !== -1; });
+
+    var rows = state.data.filter(function (g) {
+      for (var i = 0; i < active.length; i++) {
+        if (!active[i].test(g)) return false;
+      }
+      if (q && (g.title + " " + g.author).toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    });
+
+    return rows.sort(COMPARE[state.sort]);
+  }
+
+  /* ------------------------------------------------------------- cards */
+
+  function cardHtml(g, i) {
+    var o = odds(g);
+    var h = hoursLeft(g);
+    var color = band(o);
+    var url = esc(showUrl(g));
+    var title = esc(g.title);
+    var full = g.cover ? esc(g.cover) : "";
+    var small = g.cover ? esc(thumb(g.cover)) : "";
+
+    var coverInner = g.cover
+      ? '<img src="' + small + '" data-full="' + full + '" alt="" loading="lazy" decoding="async" onerror="window.__coverFail(this)">' +
+        '<span class="tint" style="background:' + color + '"></span>'
+      : '<div class="nocover" style="background:' + color + '">' +
+          '<span class="nocover-title">' + title + '</span>' +
+          '<span class="nocover-tag">No cover</span>' +
+        '</div>';
+
+    return '' +
+      '<article class="card">' +
+        '<a class="cover" href="' + url + '" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true" ' +
+           'data-color="' + color + '" data-title="' + title + '">' +
+          coverInner +
+          '<span class="dither"></span>' +
+          '<span class="rank" style="background:' + color + '">' + String(i + 1).padStart(2, "0") + '</span>' +
+        '</a>' +
+        '<div class="title-wrap">' +
+          '<a class="title" href="' + url + '" target="_blank" rel="noopener" title="' + title + '">' + title + '</a>' +
+        '</div>' +
+        '<div class="author-wrap"><span class="author">' + esc(g.author) + '</span></div>' +
+        '<div class="figures">' +
+          '<div class="cell"><span class="cell-label">Copies</span><span class="cell-value">' + fmt(g.copies) + '</span></div>' +
+          '<div class="cell"><span class="cell-label">Entrants</span><span class="cell-value">' + fmt(g.entries) + '</span></div>' +
+          '<div class="cell"><span class="cell-label">Odds</span><span class="cell-odds" style="color:' + color + '">' + oddsLabel(o) + '</span></div>' +
+          '<div class="cell"><span class="cell-label">Closes</span><span class="cell-value" style="color:' + (h < 48 ? RUST : INK) + '">' + clockLabel(h) + '</span></div>' +
+        '</div>' +
+        '<div class="enter-wrap">' +
+          '<a class="enter" href="' + esc(g.enterUrl) + '" target="_blank" rel="noopener" ' +
+             'aria-label="Enter giveaway for ' + title + '">Enter &rarr;</a>' +
+        '</div>' +
+      '</article>';
+  }
+
+  // Try the resized CDN variant, fall back to the original, then to the
+  // no-cover treatment. The ._SX318_ rewrite 404s on some URL shapes.
+  window.__coverFail = function (img) {
+    var full = img.getAttribute("data-full");
+    if (full && !img.hasAttribute("data-retried") && img.src !== full) {
+      img.setAttribute("data-retried", "1");
+      img.src = full;
+      return;
+    }
+    var cover = img.parentNode;
+    var tint = cover.querySelector(".tint");
+    if (tint) cover.removeChild(tint);
+    img.parentNode.removeChild(img);
+
+    var block = document.createElement("div");
+    block.className = "nocover";
+    block.style.background = cover.getAttribute("data-color");
+    var t = document.createElement("span");
+    t.className = "nocover-title";
+    t.textContent = cover.getAttribute("data-title");
+    var tag = document.createElement("span");
+    tag.className = "nocover-tag";
+    tag.textContent = "No cover";
+    block.appendChild(t);
+    block.appendChild(tag);
+    cover.insertBefore(block, cover.firstChild);
+  };
+
+  /* ------------------------------------------------------------ render */
+
+  function renderStats() {
+    if (!state.data.length) return;
+    var copies = 0, best = Infinity;
+    for (var i = 0; i < state.data.length; i++) {
+      copies += state.data[i].copies;
+      var o = odds(state.data[i]);
+      if (o < best) best = o;
+    }
+    el.statCount.textContent = fmt(state.data.length);
+    el.statCopies.textContent = fmt(copies);
+    el.statBest.textContent = isFinite(best) ? oddsLabel(best) : "—";
+    el.statUpdated.textContent = state.updated
+      ? new Date(state.updated).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+      : "—";
+  }
+
+  function renderControls() {
+    SORTS.forEach(function (s) {
+      var b = el.sorts.querySelector('[data-sort="' + s.key + '"]');
+      b.setAttribute("aria-pressed", String(state.sort === s.key));
+    });
+    FILTERS.forEach(function (f) {
+      var b = el.chips.querySelector('[data-filter="' + f.key + '"]');
+      b.setAttribute("aria-pressed", String(state.filters.indexOf(f.key) !== -1));
+    });
+    el.treatment.textContent = state.plain ? "Full colour: on" : "Full colour: off";
+    el.treatment.setAttribute("aria-pressed", String(state.plain));
+    document.body.classList.toggle("plain", state.plain);
+  }
+
+  function skeleton() {
+    var out = "";
+    for (var i = 0; i < 12; i++) out += '<div class="skeleton"></div>';
+    return out;
+  }
+
+  function render() {
+    renderControls();
+
+    if (state.status === "loading") {
+      el.grid.innerHTML = skeleton();
+      el.grid.setAttribute("aria-busy", "true");
+      el.resultLabel.textContent = "";
+      el.more.hidden = true;
+      el.empty.hidden = true;
+      return;
+    }
+
+    el.grid.setAttribute("aria-busy", "false");
+
+    if (state.status === "error") {
+      el.grid.innerHTML = "";
+      el.resultLabel.textContent = "";
+      el.more.hidden = true;
+      el.empty.hidden = false;
+      el.empty.textContent = "Couldn't load the giveaway list. Try again in a minute.";
+      return;
+    }
+
+    var rows = visible();
+    var total = state.data.length;
+    var shown = Math.min(rows.length, state.limit);
+    var sortLabel = SORTS.filter(function (s) { return s.key === state.sort; })[0].label;
+
+    el.resultLabel.textContent = rows.length === total
+      ? fmt(total) + " giveaways · sorted by " + sortLabel
+      : fmt(rows.length) + " of " + fmt(total) + " · sorted by " + sortLabel;
+
+    var html = "";
+    for (var i = 0; i < shown; i++) html += cardHtml(rows[i], i);
+    el.grid.innerHTML = html;
+
+    el.empty.hidden = rows.length !== 0;
+    if (rows.length === 0) {
+      el.empty.textContent = "Nothing matches that. Try a shorter search, or clear the filters.";
+    }
+
+    var remaining = rows.length - shown;
+    el.more.hidden = remaining <= 0;
+    if (remaining > 0) {
+      el.moreCount.textContent = fmt(shown) + " of " + fmt(rows.length) + " shown";
+      el.loadMore.textContent = "Show " + fmt(Math.min(PAGE_SIZE, remaining)) + " more · " + fmt(remaining) + " left";
+      el.showAll.textContent = "Show all " + fmt(rows.length);
+    }
+  }
+
+  /* --------------------------------------------------------- url state */
+
+  function syncUrl() {
+    var p = new URLSearchParams();
+    if (state.q) p.set("q", state.q);
+    if (state.sort !== "odds") p.set("sort", state.sort);
+    if (state.filters.length) p.set("filters", state.filters.join(","));
+    var qs = p.toString();
+    history.replaceState(null, "", qs ? "?" + qs : location.pathname);
+  }
+
+  function readUrl() {
+    var p = new URLSearchParams(location.search);
+    var q = p.get("q");
+    if (q) state.q = q;
+
+    var sort = p.get("sort");
+    if (sort && COMPARE[sort]) state.sort = sort;
+
+    var filters = p.get("filters");
+    if (filters) {
+      var known = FILTERS.map(function (f) { return f.key; });
+      state.filters = filters.split(",").filter(function (k) { return known.indexOf(k) !== -1; });
+    }
+  }
+
+  /* ----------------------------------------------------------- wire up */
+
+  function buildControls() {
+    var sortHtml = "";
+    SORTS.forEach(function (s) {
+      sortHtml += '<button type="button" data-sort="' + s.key + '" aria-pressed="false">' + s.label + '</button>';
+    });
+    el.sorts.insertAdjacentHTML("beforeend", sortHtml);
+
+    var chipHtml = "";
+    FILTERS.forEach(function (f) {
+      chipHtml += '<button type="button" data-filter="' + f.key + '" aria-pressed="false">' + f.label + '</button>';
+    });
+    el.chips.innerHTML = chipHtml;
+  }
+
+  // Anything that changes the result set resets the page size to 60.
+  function change(fn) {
+    fn();
+    state.limit = PAGE_SIZE;
+    syncUrl();
+    render();
+  }
+
+  el.sorts.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-sort]");
+    if (!b) return;
+    change(function () { state.sort = b.getAttribute("data-sort"); });
+  });
+
+  el.chips.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-filter]");
+    if (!b) return;
+    change(function () {
+      var key = b.getAttribute("data-filter");
+      var at = state.filters.indexOf(key);
+      if (at === -1) state.filters.push(key);
+      else state.filters.splice(at, 1);
+    });
+  });
+
+  el.search.addEventListener("input", function () {
+    change(function () { state.q = el.search.value; });
+  });
+
+  el.loadMore.addEventListener("click", function () {
+    state.limit += PAGE_SIZE;
+    render();
+  });
+
+  el.showAll.addEventListener("click", function () {
+    state.limit = Infinity;
+    render();
+  });
+
+  el.treatment.addEventListener("click", function () {
+    state.plain = !state.plain;
+    try { localStorage.setItem("bg:plain", state.plain ? "1" : "0"); } catch (err) {}
+    renderControls();
+  });
+
+  /* -------------------------------------------------------------- boot */
+
+  try { state.plain = localStorage.getItem("bg:plain") === "1"; } catch (err) {}
+  readUrl();
+  buildControls();
+  el.search.value = state.q;
+  render();
+
+  fetch("giveaways.json", { cache: "no-cache" })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error(r.status)); })
+    .then(function (d) {
+      state.data = d.giveaways || [];
+      state.updated = d.updated;
+      state.status = "ready";
+      renderStats();
+      render();
+    })
+    .catch(function () {
+      state.status = "error";
+      render();
+    });
+})();
+</script>
+
+</body>
+</html>
