@@ -46,12 +46,18 @@
   --tile:#E2E2DC;
   --sans:Archivo,Helvetica,Arial,sans-serif;
   --mono:'IBM Plex Mono',monospace;
+
+  /* Every section aligns to one gutter, so the phone breakpoint moves them all
+     with a single override. The max() also centres the content once the window
+     passes --maxw, while the backgrounds stay full-bleed. */
+  --gutter:28px;
+  --maxw:1800px;
+  --pad:max(var(--gutter),(100% - var(--maxw))/2);
 }
 
 html,body{margin:0;padding:0;background:#EFEFEC;}
 *{box-sizing:border-box;}
 a{color:#101014;}
-a:hover{color:#2F4BFF;}
 input::placeholder{color:#8A8C90;}
 ::selection{background:#2F4BFF;color:#EFEFEC;}
 body{
@@ -61,11 +67,18 @@ body{
   min-height:100vh;
 }
 
+/* Sections carry their own vertical rhythm; the horizontal edge is shared. */
+.hero,.bar,.meta,.grid,.more,.empty{padding-inline:var(--pad);}
+footer{margin-inline:var(--pad);}
+
 /* ---------------------------------------------------------------- hero */
 .hero{
   background:var(--accent);
-  padding:20px 28px 22px;
+  padding-block:20px 22px;
+  /* svh keeps the hero inside the visible area on a phone whose browser
+     toolbar is still showing; vh first for engines without the newer units. */
   min-height:58vh;
+  min-height:58svh;
   display:flex;
   flex-direction:column;
 }
@@ -84,7 +97,6 @@ body{
   padding:2px 0;
   border-bottom:1px solid rgba(16,16,20,.35);
 }
-.backlink:hover{border-bottom-color:var(--ink);color:var(--ink);}
 
 .hero-mid{flex:1;display:flex;align-items:center;padding:44px 0 32px;}
 .hero-copy{display:flex;flex-direction:column;gap:26px;width:100%;}
@@ -142,7 +154,7 @@ h1{
   z-index:20;
   background:var(--paper);
   border-bottom:1px solid var(--ink);
-  padding:12px 28px 11px;
+  padding-block:12px 11px;
   display:flex;
   flex-wrap:wrap;
   gap:14px 22px;
@@ -190,9 +202,11 @@ h1{
   cursor:pointer;
   border-radius:2px;
 }
-.sorts button:hover{background:var(--tile);}
-.sorts button[aria-pressed="true"],
-.sorts button[aria-pressed="true"]:hover{background:var(--ink);color:var(--paper);}
+.sorts button[aria-pressed="true"]{background:var(--ink);color:var(--paper);}
+/* Only the active column shows a direction, because only it has one. Reserving
+   the arrow's width on every button would push the row wider for no gain. */
+.sorts button[data-dir]::after{content:"\2191";margin-left:6px;}
+.sorts button[data-dir="desc"]::after{content:"\2193";}
 
 .chips{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .chips button{
@@ -215,7 +229,7 @@ h1{
 
 /* ---------------------------------------------------------- meta line */
 .meta{
-  padding:14px 28px 6px;
+  padding-block:14px 6px;
   display:flex;
   justify-content:space-between;
   align-items:baseline;
@@ -233,7 +247,7 @@ h1{
 .legend i{width:9px;height:9px;display:block;border-radius:1px;}
 /* --------------------------------------------------------------- grid */
 .grid{
-  padding:10px 28px 80px;
+  padding-block:10px 80px;
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(212px,1fr));
   column-gap:22px;
@@ -327,7 +341,6 @@ h1{
   -webkit-box-orient:vertical;
   overflow:hidden;
 }
-.title:hover{color:var(--accent);}
 
 .author-wrap{align-self:start;padding-top:3px;}
 .author{font-size:12.5px;color:var(--muted);line-height:1.3;}
@@ -369,7 +382,6 @@ h1{
   color:var(--ink);
   text-decoration:none;
 }
-.enter:hover{background:var(--ink);color:var(--paper);}
 
 .skeleton{aspect-ratio:2/3;background:var(--tile);margin-bottom:38px;}
 
@@ -389,7 +401,7 @@ h1{
 
 /* ---------------------------------------------------- load more/empty */
 .more{
-  padding:0 28px 90px;
+  padding-block:0 90px;
   margin-top:-40px;
   display:flex;
   flex-direction:column;
@@ -415,7 +427,6 @@ h1{
   padding:11px 22px;
   cursor:pointer;
 }
-.btn-primary:hover{background:var(--ink);color:var(--paper);}
 .btn-secondary{
   border:1px solid var(--line);
   background:transparent;
@@ -427,10 +438,9 @@ h1{
   padding:11px 18px;
   cursor:pointer;
 }
-.btn-secondary:hover{border-color:var(--ink);color:var(--ink);}
 
 .empty{
-  padding:60px 28px 100px;
+  padding-block:60px 100px;
   text-align:center;
   color:var(--muted);
   font-size:15px;
@@ -439,7 +449,7 @@ h1{
 /* ------------------------------------------------------------- footer */
 footer{
   border-top:1px solid var(--ink);
-  margin:0 28px;
+  margin-block:0;
   padding:22px 0 60px;
   display:flex;
   gap:28px;
@@ -457,7 +467,9 @@ footer a{
   border-bottom:1px solid var(--line);
   height:fit-content;
 }
-footer a:hover{color:var(--ink);}
+/* Shown only below 640px, where the meta line drops its copy of the legend and
+   the odds colours would otherwise go unexplained. */
+footer .legend{display:none;}
 
 /* --------------------------------------------------------- responsive */
 /* Below the width where four 140px stat cells fit, the strip wraps. Pin it to
@@ -470,19 +482,84 @@ footer a:hover{color:var(--ink);}
 
 @media (max-width:640px){
   .meta-right{display:none;}
-}
-@media (max-width:560px){
-  .search{flex:1 1 100%;}
+  footer .legend{display:flex;}
 }
 
 /* The spec requires 2 columns on phones ("do not drop to 1 column"), but
    auto-fill with a 212px floor needs 446px of content width and a 480px phone
    only has 424px. Pin 2 columns below the width where auto-fill would give a
-   third anyway (700px), so the handoff between the two rules is seamless. */
+   third anyway (700px), so the handoff between the two rules is seamless. At
+   561-700px the gutter is still 28px and the gap 22px, so auto-fill would
+   independently give 2 columns from 502px up; below 561px the narrower gutter
+   and gap (see next block) mean this pin is what holds the second column. */
 @media (max-width:700px){
   .grid{grid-template-columns:repeat(2,1fr);}
   /* Half-size cards want a proportionally smaller offset. */
   .cover{box-shadow:5px 5px 0 var(--band);}
+}
+
+/* ------------------------------------------------------------ phones */
+@media (max-width:560px){
+  :root{--gutter:20px;}
+
+  /* 58svh of a phone screen is more hero than anyone needs before the first
+     cover; the fixed vertical padding was the bulk of it, not the min-height. */
+  .hero{padding-block:16px 18px;min-height:52svh;}
+  .hero-mid{padding:26px 0 18px;}
+  .hero-copy{gap:16px;}
+  h1{font-size:clamp(44px,13.5vw,168px);}
+
+  /* Six sort buttons and four chips wrapped to four rows, so the sticky bar ate
+     39% of a 320px viewport. One scrollable row each is shorter *and* leaves
+     room for a real tap target — the spec allows the swap explicitly. */
+  .bar{
+    padding-block:10px;
+    flex-wrap:nowrap;
+    flex-direction:column;
+    align-items:stretch;
+    gap:10px;
+  }
+  .search{flex:1 1 100%;}
+  .sorts,.chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;}
+  .sorts::-webkit-scrollbar,.chips::-webkit-scrollbar{display:none;}
+  /* Without this the chips wrap internally and grow taller than the row they
+     saved. The clipped last button is the scroll affordance. */
+  .sorts button,.chips button{white-space:nowrap;}
+
+  .grid{column-gap:16px;}
+  /* A 38px row gutter is out of proportion under a 132px card. The skeleton
+     fakes the same gutter with a margin, so it moves too. */
+  .enter-wrap{padding-bottom:28px;}
+  .skeleton{margin-bottom:28px;}
+
+  /* "1 in 1,234" needs 99px and a half-column here is 74px, so the figure the
+     whole page is ranked by wrapped mid-phrase on 70% of rows. Give odds the
+     full card width at the top of the block; copies/entrants still pair. */
+  .cell--odds{grid-column:1 / -1;order:-1;}
+
+  /* Smallest sustained reading text in the design; 10.5px mono is too fine on
+     a phone. A deliberate step away from the handoff's fixed size. */
+  footer{font-size:11.5px;}
+}
+
+/* Touch affordances are keyed to the pointer, not the width — a phone held in
+   landscape is 844px wide and still wants a thumb-sized target. */
+@media (pointer:coarse){
+  /* Under 16px, iOS Safari zooms the page when the field takes focus. */
+  .search input{font-size:16px;}
+  .sorts button{padding:10px;}
+  .chips button{padding:9px 12px;}
+  .enter{padding:11px 0;}
+}
+
+/* Landscape phones. min-height was never the problem — a 12vw H1 plus 76px of
+   fixed vertical padding made the hero 118% of a 390px-tall viewport, so the
+   stat strip sat a full screen below the fold. */
+@media (max-height:520px) and (min-width:561px){
+  .hero{min-height:auto;padding-bottom:0;}
+  .hero-mid{padding:22px 0 18px;}
+  .hero-copy{gap:14px;}
+  h1{font-size:clamp(40px,7vw,168px);}
 }
 
 @media (prefers-reduced-motion:no-preference){
@@ -493,10 +570,22 @@ footer a:hover{color:var(--ink);}
   .cover{transition:transform .12s linear,box-shadow .12s linear;}
 }
 
-/* The cover is the card's primary link, so give it a press to hover on: shifting
-   3px into a shadow 3px shorter leaves the shadow's outer edge where it was.
-   Pointer-gated, because a tap leaves :hover stuck on touch screens. */
+/* Every hover state lives here, because a tap leaves :hover stuck on a touch
+   screen — an inverted sort button reads as selected until you tap elsewhere.
+   The aria-pressed styling stays outside: that is state, not hover. */
 @media (hover:hover){
+  a:hover{color:var(--accent);}
+  .backlink:hover{border-bottom-color:var(--ink);color:var(--ink);}
+  .sorts button:hover{background:var(--tile);}
+  .sorts button[aria-pressed="true"]:hover{background:var(--ink);color:var(--paper);}
+  .title:hover{color:var(--accent);}
+  .enter:hover{background:var(--ink);color:var(--paper);}
+  .btn-primary:hover{background:var(--ink);color:var(--paper);}
+  .btn-secondary:hover{border-color:var(--ink);color:var(--ink);}
+  footer a:hover{color:var(--ink);}
+
+  /* The cover is the card's primary link, so give it a press to hover on:
+     shifting 3px into a shadow 3px shorter leaves the outer edge where it was. */
   .card:hover .cover{
     transform:translate(3px,3px);
     box-shadow:5px 5px 0 var(--band);
@@ -581,6 +670,11 @@ footer a:hover{color:var(--ink);}
 
 <footer>
   <span class="note">Scraped from goodreads.com twice daily. Entrant counts are as of the last run, so treat odds as approximate &mdash; they move fast on popular titles. Entering is still a manual click on Goodreads; automated entries get disqualified under their terms.</span>
+  <div class="legend">
+    <span><i style="background:#2F4BFF"></i>Short odds</span>
+    <span><i style="background:#A8761B"></i>Middling</span>
+    <span><i style="background:#B03A2A"></i>Long shot</span>
+  </div>
   <a href="https://sabtainkhan.com">sabtainkhan.com</a>
 </footer>
 
@@ -588,17 +682,30 @@ footer a:hover{color:var(--ink);}
 (function () {
   "use strict";
 
-  var PAGE_SIZE = 60;
+  // Two columns on a phone makes 60 cards 30 rows of scrolling and 60 cover
+  // requests before anyone has touched a control. Paging smaller, not capping:
+  // "Show all" still mounts the lot.
+  var PAGE_SIZE = window.matchMedia("(max-width:700px)").matches ? 36 : 60;
   var ACCENT = "#2F4BFF", OCHRE = "#A8761B", RUST = "#B03A2A", INK = "#101014";
 
+  // dir is the direction that puts the most useful end first, so a fresh click
+  // on a column lands on the answer people usually want; clicking the column
+  // again flips it. asc/desc name each direction for the meta line and the
+  // button's accessible label.
   var SORTS = [
-    { key: "odds",    label: "Odds" },
-    { key: "ending",  label: "Ending" },
-    { key: "entries", label: "Entrants" },
-    { key: "copies",  label: "Copies" },
-    { key: "title",   label: "Title" },
-    { key: "author",  label: "Author" }
+    { key: "odds",    label: "Odds",     dir: "asc",  asc: "shortest first", desc: "longest first" },
+    { key: "ending",  label: "Ending",   dir: "asc",  asc: "soonest first",  desc: "latest first" },
+    { key: "entries", label: "Entrants", dir: "asc",  asc: "fewest first",   desc: "most first" },
+    { key: "copies",  label: "Copies",   dir: "desc", asc: "fewest first",   desc: "most first" },
+    { key: "title",   label: "Title",    dir: "asc",  asc: "A to Z",         desc: "Z to A" },
+    { key: "author",  label: "Author",   dir: "asc",  asc: "A to Z",         desc: "Z to A" }
   ];
+
+  function sortSpec(key) {
+    return SORTS.filter(function (s) { return s.key === key; })[0];
+  }
+
+  function flip(dir) { return dir === "asc" ? "desc" : "asc"; }
 
   var FILTERS = [
     { key: "closing",    label: "Closing in 48h",        test: function (g) { return hoursLeft(g) <= 48; } },
@@ -613,6 +720,7 @@ footer a:hover{color:var(--ink);}
     updated: null,
     q: "",
     sort: "odds",
+    dir: sortSpec("odds").dir,
     filters: [],
     limit: PAGE_SIZE
   };
@@ -662,10 +770,38 @@ footer a:hover{color:var(--ink);}
     return Math.round(h / 24) + "d";
   }
 
+  // The Amazon CDN resizes on demand via a ._SX<width>_ segment in the filename.
+  // 320 rather than 318: a 2x phone needs 319px for its half-column, and a
+  // candidate one pixel short pushes the browser to the next rung for nothing.
+  // The ladder stops at 320 because most Goodreads covers are only ~330px wide
+  // at source — a wider rung returns the same pixels under a descriptor that
+  // overstates them, which just makes the browser pick the heavier file.
+  var COVER_WIDTHS = [160, 240, 320];
+
+  function variant(url, w) {
+    return url.replace(/(\.[a-z]{3,4})$/i, "._SX" + w + "_$1");
+  }
+
   function thumb(url) {
     if (!url) return null;
-    return url.replace(/(\.[a-z]{3,4})$/i, "._SX318_$1");
+    return variant(url, 320);
   }
+
+  function coverSrcset(url) {
+    return COVER_WIDTHS.map(function (w) {
+      return variant(url, w) + " " + w + "w";
+    }).join(", ");
+  }
+
+  // Slot widths the layout actually produces, measured across the range: below
+  // 560px a 20px gutter and a 16px column gap, to 700px a 28px gutter and a
+  // 22px gap. Past that auto-fill makes the card widest just before it adds a
+  // column — 321px at ~720px and 270px at ~1200px — then it settles under
+  // 240px once --maxw caps the row at seven. Understating any of these buys a
+  // cover too small for its slot, so each branch quotes the band's widest card.
+  var COVER_SIZES = "(max-width:560px) calc((100vw - 56px)/2), " +
+                    "(max-width:700px) calc((100vw - 78px)/2), " +
+                    "(max-width:1300px) 321px, 240px";
 
   function esc(s) {
     return String(s == null ? "" : s)
@@ -680,11 +816,14 @@ footer a:hover{color:var(--ink);}
 
   /* ----------------------------------------------------------- pipeline */
 
+  // All ascending. Direction is applied once, in visible(), by flipping the
+  // sign — so "most copies first" is copies-descending rather than a comparator
+  // that quietly disagrees with the other five.
   var COMPARE = {
     odds:    function (a, b) { return odds(a) - odds(b); },
     ending:  function (a, b) { return hoursLeft(a) - hoursLeft(b); },
     entries: function (a, b) { return a.entries - b.entries; },
-    copies:  function (a, b) { return b.copies - a.copies; },
+    copies:  function (a, b) { return a.copies - b.copies; },
     title:   function (a, b) { return a.title.localeCompare(b.title); },
     author:  function (a, b) { return a.author.localeCompare(b.author); }
   };
@@ -701,7 +840,11 @@ footer a:hover{color:var(--ink);}
       return true;
     });
 
-    return rows.sort(COMPARE[state.sort]);
+    // Flipping the sign rather than reversing the array: sort is stable, so ties
+    // keep their incoming order in both directions instead of mirroring.
+    var cmp = COMPARE[state.sort];
+    var sign = state.dir === "desc" ? -1 : 1;
+    return rows.sort(function (a, b) { return sign * cmp(a, b); });
   }
 
   /* ------------------------------------------------------------- cards */
@@ -716,7 +859,9 @@ footer a:hover{color:var(--ink);}
     var small = g.cover ? esc(thumb(g.cover)) : "";
 
     var coverInner = g.cover
-      ? '<img src="' + small + '" data-full="' + full + '" alt="" loading="lazy" decoding="async" onerror="window.__coverFail(this)">'
+      ? '<img src="' + small + '" srcset="' + esc(coverSrcset(g.cover)) + '" ' +
+           'sizes="' + COVER_SIZES + '" data-full="' + full + '" alt="" ' +
+           'loading="lazy" decoding="async" onerror="window.__coverFail(this)">'
       : '<div class="nocover">' +
           '<span class="nocover-title">' + title + '</span>' +
           '<span class="nocover-tag">No cover</span>' +
@@ -738,7 +883,7 @@ footer a:hover{color:var(--ink);}
         '<div class="figures">' +
           '<div class="cell"><span class="cell-label">Copies</span><span class="cell-value">' + fmt(g.copies) + '</span></div>' +
           '<div class="cell"><span class="cell-label">Entrants</span><span class="cell-value">' + fmt(g.entries) + '</span></div>' +
-          '<div class="cell"><span class="cell-label">Odds</span><span class="cell-odds">' + oddsLabel(o) + '</span></div>' +
+          '<div class="cell cell--odds"><span class="cell-label">Odds</span><span class="cell-odds">' + oddsLabel(o) + '</span></div>' +
           '<div class="cell"><span class="cell-label">Closes</span><span class="cell-value" style="color:' + (h < 48 ? RUST : INK) + '">' + clockLabel(h) + '</span></div>' +
         '</div>' +
         '<div class="enter-wrap">' +
@@ -748,12 +893,15 @@ footer a:hover{color:var(--ink);}
       '</article>';
   }
 
-  // Try the resized CDN variant, fall back to the original, then to the
-  // no-cover treatment. The ._SX318_ rewrite 404s on some URL shapes.
+  // Try the resized CDN variants, fall back to the original, then to the
+  // no-cover treatment. The ._SX###_ rewrite 404s on some URL shapes.
   window.__coverFail = function (img) {
     var full = img.getAttribute("data-full");
     if (full && !img.hasAttribute("data-retried") && img.src !== full) {
       img.setAttribute("data-retried", "1");
+      // srcset outranks src, so the retry is a no-op until the candidates go.
+      img.removeAttribute("srcset");
+      img.removeAttribute("sizes");
       img.src = full;
       return;
     }
@@ -794,7 +942,18 @@ footer a:hover{color:var(--ink);}
   function renderControls() {
     SORTS.forEach(function (s) {
       var b = el.sorts.querySelector('[data-sort="' + s.key + '"]');
-      b.setAttribute("aria-pressed", String(state.sort === s.key));
+      var on = state.sort === s.key;
+      b.setAttribute("aria-pressed", String(on));
+      // The arrow is a CSS ::after, which screen readers may skip, so the active
+      // button spells out where it is and what the next click does.
+      if (on) {
+        b.setAttribute("data-dir", state.dir);
+        b.setAttribute("aria-label", s.label + ", " + s[state.dir] +
+          " — activate to sort " + s[flip(state.dir)]);
+      } else {
+        b.removeAttribute("data-dir");
+        b.removeAttribute("aria-label");
+      }
     });
     FILTERS.forEach(function (f) {
       var b = el.chips.querySelector('[data-filter="' + f.key + '"]');
@@ -834,7 +993,8 @@ footer a:hover{color:var(--ink);}
     var rows = visible();
     var total = state.data.length;
     var shown = Math.min(rows.length, state.limit);
-    var sortLabel = SORTS.filter(function (s) { return s.key === state.sort; })[0].label;
+    var spec = sortSpec(state.sort);
+    var sortLabel = spec.label + ", " + spec[state.dir];
 
     el.resultLabel.textContent = rows.length === total
       ? fmt(total) + " giveaways · sorted by " + sortLabel
@@ -864,6 +1024,9 @@ footer a:hover{color:var(--ink);}
     var p = new URLSearchParams();
     if (state.q) p.set("q", state.q);
     if (state.sort !== "odds") p.set("sort", state.sort);
+    // Only when flipped away from the column's default, so links people have
+    // already shared keep meaning what they meant.
+    if (state.dir !== sortSpec(state.sort).dir) p.set("dir", state.dir);
     if (state.filters.length) p.set("filters", state.filters.join(","));
     var qs = p.toString();
     history.replaceState(null, "", qs ? "?" + qs : location.pathname);
@@ -876,6 +1039,10 @@ footer a:hover{color:var(--ink);}
 
     var sort = p.get("sort");
     if (sort && COMPARE[sort]) state.sort = sort;
+    // Default follows the sort, so read it after, and ignore anything else.
+    state.dir = sortSpec(state.sort).dir;
+    var dir = p.get("dir");
+    if (dir === "asc" || dir === "desc") state.dir = dir;
 
     var filters = p.get("filters");
     if (filters) {
@@ -911,7 +1078,16 @@ footer a:hover{color:var(--ink);}
   el.sorts.addEventListener("click", function (e) {
     var b = e.target.closest("[data-sort]");
     if (!b) return;
-    change(function () { state.sort = b.getAttribute("data-sort"); });
+    change(function () {
+      var key = b.getAttribute("data-sort");
+      // Same column again flips direction; a new column starts at its default.
+      if (key === state.sort) {
+        state.dir = flip(state.dir);
+      } else {
+        state.sort = key;
+        state.dir = sortSpec(key).dir;
+      }
+    });
   });
 
   el.chips.addEventListener("click", function (e) {
