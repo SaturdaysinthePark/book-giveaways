@@ -4,8 +4,32 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Book Giveaways</title>
-<meta name="description" content="Every open Goodreads print book giveaway in one place, ranked by the odds you'll actually win. Search it, sort it, enter the ones worth the click.">
+<meta name="description" content="Every open Goodreads book giveaway in one place, ranked by the odds you'll actually win. Search it, sort it, enter the ones worth the click.">
 <meta name="theme-color" content="#2F4BFF">
+<link rel="canonical" href="https://sabtainkhan.com/book-giveaways">
+
+<!-- Icon and share-card URLs are absolute for the same reason dataUrl() exists
+     down in the script: proxied in at sabtainkhan.com/book-giveaways with no
+     trailing slash, a relative path resolves against the domain root and lands
+     on the personal site's assets instead of these. -->
+<link rel="icon" href="https://sabtainkhan.com/book-giveaways/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="https://sabtainkhan.com/book-giveaways/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="https://sabtainkhan.com/book-giveaways/apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="sabtainkhan.com">
+<meta property="og:url" content="https://sabtainkhan.com/book-giveaways">
+<meta property="og:title" content="Book Giveaways">
+<meta property="og:description" content="Goodreads book giveaways, now easier to filter, sort and search.">
+<meta property="og:image" content="https://sabtainkhan.com/book-giveaways/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Book Giveaways — every open Goodreads giveaway, ranked by odds.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Book Giveaways">
+<meta name="twitter:description" content="Goodreads book giveaways, now easier to filter, sort and search.">
+<meta name="twitter:image" content="https://sabtainkhan.com/book-giveaways/og.png">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -256,15 +280,15 @@ h1{
   position:absolute;
   inset:0;
   mix-blend-mode:color;
-  opacity:.9;
+  opacity:.75;
   pointer-events:none;
 }
 .dither{
   position:absolute;
   inset:0;
   pointer-events:none;
-  opacity:.55;
-  background:repeating-linear-gradient(180deg,rgba(239,239,236,0) 0 1px,rgba(239,239,236,.85) 1px 2px);
+  opacity:.22;
+  background:repeating-linear-gradient(180deg,rgba(239,239,236,0) 0 3px,rgba(239,239,236,.85) 3px 4px);
 }
 body.plain .cover img{filter:none;}
 body.plain .tint,

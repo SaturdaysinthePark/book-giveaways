@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Book Giveaways — share card</title>
+<!-- Source for public/og.png (1200x630). Render with: python3 tools/make-assets.py
+     Same palette and type system as public/index.html: accent field, ink text,
+     Archivo for display, IBM Plex Mono for the labels. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EFEFEC;
+  --ink:#101014;
+  --accent:#2F4BFF;
+  --sans:Archivo,Helvetica,Arial,sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+  --rule:rgba(16,16,20,.28);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  width:1200px;
+  height:630px;
+  overflow:hidden;
+  background:var(--accent);
+  color:var(--ink);
+  font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;
+}
+.card{
+  width:100%;
+  height:100%;
+  padding:46px 64px 0;
+  display:flex;
+  flex-direction:column;
+}
+.top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding-bottom:26px;
+  border-bottom:1px solid var(--rule);
+}
+.ticket{width:104px;height:80px;display:block;}
+.tag{
+  font-family:var(--mono);
+  font-size:15px;
+  font-weight:500;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  opacity:.7;
+}
+.mid{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:24px;
+  padding:22px 0;
+}
+h1{
+  margin:0;
+  font-weight:600;
+  font-size:126px;
+  line-height:.84;
+  letter-spacing:-.045em;
+  text-transform:uppercase;
+}
+.deck{
+  margin:0;
+  max-width:34ch;
+  font-size:30px;
+  line-height:1.35;
+  font-weight:400;
+}
+.bottom{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  height:76px;
+  border-top:1px solid var(--rule);
+  font-family:var(--mono);
+  font-size:16px;
+  font-weight:500;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+.bottom .muted{opacity:.7;}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="top">
+    <!-- Same mark as public/favicon.svg, minus its accent tile: the field is
+         already accent, so the ticket sits straight on it. -->
+    <svg class="ticket" viewBox="3 6 26 20" aria-hidden="true">
+      <rect x="3" y="7" width="26" height="18" rx="2.6" fill="#EFEFEC"/>
+      <circle cx="22.6" cy="7" r="2.1" fill="#2F4BFF"/>
+      <circle cx="22.6" cy="25" r="2.1" fill="#2F4BFF"/>
+      <path d="M22.6 10.8v10.4" stroke="#2F4BFF" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="1.9 2.2"/>
+      <g fill="#2F4BFF">
+        <path d="M5.8 12.7c2.4-1.5 4.6-1.3 6.1-.2v7.3c-1.5-1.1-3.7-1.3-6.1.2z"/>
+        <path d="M19.4 12.7c-2.4-1.5-4.6-1.3-6.1-.2v7.3c1.5-1.1 3.7-1.3 6.1.2z"/>
+      </g>
+    </svg>
+    <span class="tag">Ranked by the odds you'll win</span>
+  </div>
+
+  <div class="mid">
+    <h1>Book<br>Giveaways</h1>
+    <p class="deck">Goodreads book giveaways, now easier to filter, sort and search</p>
+  </div>
+
+  <div class="bottom">
+    <span>By sabtainkhan.com</span>
+    <span class="muted">Updated twice daily</span>
+  </div>
+</div>
+
+</body>
+</html>
