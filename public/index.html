@@ -231,20 +231,6 @@ h1{
 .legend{display:flex;gap:12px;align-items:center;}
 .legend span{display:flex;gap:5px;align-items:center;}
 .legend i{width:9px;height:9px;display:block;border-radius:1px;}
-.treatment{
-  border:1px solid var(--line);
-  background:transparent;
-  color:var(--muted);
-  font-family:var(--mono);
-  font-size:10px;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-  padding:5px 9px;
-  border-radius:2px;
-  cursor:pointer;
-}
-.treatment:hover{border-color:var(--ink);color:var(--ink);}
-
 /* --------------------------------------------------------------- grid */
 .grid{
   padding:10px 28px 80px;
@@ -261,6 +247,8 @@ h1{
   align-content:start;
 }
 
+/* The covers carry their own artwork; --band (set per card, see cardHtml) does
+   the odds colour-coding from the layout instead of washing over the image. */
 .cover{
   position:relative;
   display:block;
@@ -268,36 +256,20 @@ h1{
   background:var(--tile);
   overflow:hidden;
   text-decoration:none;
+  box-shadow:8px 8px 0 var(--band);
 }
 .cover img{
   width:100%;
   height:100%;
   object-fit:cover;
   display:block;
-  filter:grayscale(1) contrast(1.08) brightness(1.04);
 }
-.tint{
-  position:absolute;
-  inset:0;
-  mix-blend-mode:color;
-  opacity:.75;
-  pointer-events:none;
-}
-.dither{
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  opacity:.22;
-  background:repeating-linear-gradient(180deg,rgba(239,239,236,0) 0 3px,rgba(239,239,236,.85) 3px 4px);
-}
-body.plain .cover img{filter:none;}
-body.plain .tint,
-body.plain .dither{opacity:0;}
 
 .rank{
   position:absolute;
   top:0;
   left:0;
+  background:var(--band);
   color:var(--paper);
   font-family:var(--mono);
   font-size:10px;
@@ -308,6 +280,7 @@ body.plain .dither{opacity:0;}
 .nocover{
   width:100%;
   height:100%;
+  background:var(--band);
   display:flex;
   flex-direction:column;
   justify-content:flex-end;
@@ -338,7 +311,7 @@ body.plain .dither{opacity:0;}
 .title-wrap{
   border-top:1px solid var(--ink);
   padding-top:9px;
-  margin-top:11px;
+  margin-top:18px;
   align-self:start;
 }
 .title{
@@ -380,6 +353,7 @@ body.plain .dither{opacity:0;}
   font-weight:600;
   letter-spacing:-.02em;
   font-variant-numeric:tabular-nums;
+  color:var(--band);
 }
 
 .enter-wrap{margin-top:12px;padding-bottom:38px;align-self:end;}
@@ -507,12 +481,25 @@ footer a:hover{color:var(--ink);}
    third anyway (700px), so the handoff between the two rules is seamless. */
 @media (max-width:700px){
   .grid{grid-template-columns:repeat(2,1fr);}
+  /* Half-size cards want a proportionally smaller offset. */
+  .cover{box-shadow:5px 5px 0 var(--band);}
 }
 
 @media (prefers-reduced-motion:no-preference){
-  .backlink,.title,.enter,.sorts button,.chips button,.treatment,
+  .backlink,.title,.enter,.sorts button,.chips button,
   .btn-primary,.btn-secondary,footer a{
     transition:background-color .12s linear,color .12s linear,border-color .12s linear;
+  }
+  .cover{transition:transform .12s linear,box-shadow .12s linear;}
+}
+
+/* The cover is the card's primary link, so give it a press to hover on: shifting
+   3px into a shadow 3px shorter leaves the shadow's outer edge where it was.
+   Pointer-gated, because a tap leaves :hover stuck on touch screens. */
+@media (hover:hover){
+  .card:hover .cover{
+    transform:translate(3px,3px);
+    box-shadow:5px 5px 0 var(--band);
   }
 }
 
@@ -577,7 +564,6 @@ footer a:hover{color:var(--ink);}
       <span><i style="background:#A8761B"></i>Middling</span>
       <span><i style="background:#B03A2A"></i>Long shot</span>
     </div>
-    <button class="treatment" id="treatment" aria-pressed="false">Full colour: off</button>
   </div>
 </div>
 
@@ -628,7 +614,6 @@ footer a:hover{color:var(--ink);}
     q: "",
     sort: "odds",
     filters: [],
-    plain: false,
     limit: PAGE_SIZE
   };
 
@@ -643,7 +628,6 @@ footer a:hover{color:var(--ink);}
     search: document.getElementById("search"),
     sorts: document.getElementById("sorts"),
     chips: document.getElementById("chips"),
-    treatment: document.getElementById("treatment"),
     statCount: document.getElementById("stat-count"),
     statCopies: document.getElementById("stat-copies"),
     statBest: document.getElementById("stat-best"),
@@ -732,20 +716,20 @@ footer a:hover{color:var(--ink);}
     var small = g.cover ? esc(thumb(g.cover)) : "";
 
     var coverInner = g.cover
-      ? '<img src="' + small + '" data-full="' + full + '" alt="" loading="lazy" decoding="async" onerror="window.__coverFail(this)">' +
-        '<span class="tint" style="background:' + color + '"></span>'
-      : '<div class="nocover" style="background:' + color + '">' +
+      ? '<img src="' + small + '" data-full="' + full + '" alt="" loading="lazy" decoding="async" onerror="window.__coverFail(this)">'
+      : '<div class="nocover">' +
           '<span class="nocover-title">' + title + '</span>' +
           '<span class="nocover-tag">No cover</span>' +
         '</div>';
 
+    // --band is the odds colour: the cover shadow, the rank chip, the odds
+    // figure and the no-cover tile all read it off the card.
     return '' +
-      '<article class="card">' +
+      '<article class="card" style="--band:' + color + '">' +
         '<a class="cover" href="' + url + '" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true" ' +
-           'data-color="' + color + '" data-title="' + title + '">' +
+           'data-title="' + title + '">' +
           coverInner +
-          '<span class="dither"></span>' +
-          '<span class="rank" style="background:' + color + '">' + String(i + 1).padStart(2, "0") + '</span>' +
+          '<span class="rank">' + String(i + 1).padStart(2, "0") + '</span>' +
         '</a>' +
         '<div class="title-wrap">' +
           '<a class="title" href="' + url + '" target="_blank" rel="noopener" title="' + title + '">' + title + '</a>' +
@@ -754,7 +738,7 @@ footer a:hover{color:var(--ink);}
         '<div class="figures">' +
           '<div class="cell"><span class="cell-label">Copies</span><span class="cell-value">' + fmt(g.copies) + '</span></div>' +
           '<div class="cell"><span class="cell-label">Entrants</span><span class="cell-value">' + fmt(g.entries) + '</span></div>' +
-          '<div class="cell"><span class="cell-label">Odds</span><span class="cell-odds" style="color:' + color + '">' + oddsLabel(o) + '</span></div>' +
+          '<div class="cell"><span class="cell-label">Odds</span><span class="cell-odds">' + oddsLabel(o) + '</span></div>' +
           '<div class="cell"><span class="cell-label">Closes</span><span class="cell-value" style="color:' + (h < 48 ? RUST : INK) + '">' + clockLabel(h) + '</span></div>' +
         '</div>' +
         '<div class="enter-wrap">' +
@@ -774,13 +758,10 @@ footer a:hover{color:var(--ink);}
       return;
     }
     var cover = img.parentNode;
-    var tint = cover.querySelector(".tint");
-    if (tint) cover.removeChild(tint);
     img.parentNode.removeChild(img);
 
     var block = document.createElement("div");
     block.className = "nocover";
-    block.style.background = cover.getAttribute("data-color");
     var t = document.createElement("span");
     t.className = "nocover-title";
     t.textContent = cover.getAttribute("data-title");
@@ -819,9 +800,6 @@ footer a:hover{color:var(--ink);}
       var b = el.chips.querySelector('[data-filter="' + f.key + '"]');
       b.setAttribute("aria-pressed", String(state.filters.indexOf(f.key) !== -1));
     });
-    el.treatment.textContent = state.plain ? "Full colour: on" : "Full colour: off";
-    el.treatment.setAttribute("aria-pressed", String(state.plain));
-    document.body.classList.toggle("plain", state.plain);
   }
 
   function skeleton() {
@@ -961,15 +939,8 @@ footer a:hover{color:var(--ink);}
     render();
   });
 
-  el.treatment.addEventListener("click", function () {
-    state.plain = !state.plain;
-    try { localStorage.setItem("bg:plain", state.plain ? "1" : "0"); } catch (err) {}
-    renderControls();
-  });
-
   /* -------------------------------------------------------------- boot */
 
-  try { state.plain = localStorage.getItem("bg:plain") === "1"; } catch (err) {}
   readUrl();
   buildControls();
   el.search.value = state.q;

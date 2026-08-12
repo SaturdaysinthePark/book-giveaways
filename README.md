@@ -110,9 +110,17 @@ and from the raw `book-giveaways.netlify.app` origin alike.
 
 ## Design
 
-Built from a high-fidelity handoff. Two places where the implementation departs
-from the spec as literally written, both deliberate:
+Built from a high-fidelity handoff. Three places where the implementation departs
+from the spec as literally written, all deliberate:
 
+- **No duotone cover treatment.** The spec stacks three layers on every cover:
+  `grayscale(1)`, a band-coloured tint in `mix-blend-mode:color`, and a paper
+  scanline. In practice the texture fought the artwork — it was softened twice
+  (scanline 2px/55% → 4px/22%, tint 90% → 75%) and still read as noise, so all
+  three layers came out. Covers show their real artwork and the odds colour moved
+  off the image into the layout: an 8px hard offset shadow on the cover, plus the
+  rank chip and the odds figure, all reading `--band` off the card. The "Full
+  colour" toggle went with it, having nothing left to toggle.
 - **Two columns on phones.** The spec requires "2 columns on a 480px phone — do
   not drop to 1 column", but its own tokens (`minmax(212px, 1fr)`, 22px gap,
   28px gutter) need 446px of content width, and a 480px phone has 424px. Below
