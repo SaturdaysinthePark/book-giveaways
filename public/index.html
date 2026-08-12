@@ -951,7 +951,17 @@ footer a:hover{color:var(--ink);}
   el.search.value = state.q;
   render();
 
-  fetch("giveaways.json", { cache: "no-cache" })
+  // Resolve the data file against this page's own directory rather than with a
+  // bare relative path. Proxied in at sabtainkhan.com/book-giveaways (no
+  // trailing slash), a relative "giveaways.json" would resolve to the domain
+  // root and 404, because the browser reads "book-giveaways" as a filename.
+  function dataUrl() {
+    var dir = location.pathname.replace(/[^/]*\.html?$/i, "");
+    if (dir.charAt(dir.length - 1) !== "/") dir += "/";
+    return dir + "giveaways.json";
+  }
+
+  fetch(dataUrl(), { cache: "no-cache" })
     .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error(r.status)); })
     .then(function (d) {
       state.data = d.giveaways || [];
