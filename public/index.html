@@ -44,6 +44,10 @@
   --faint:#8A8C90;
   --line:#C9C9C2;
   --tile:#E2E2DC;
+  /* Ticket fields — one per odds band, keyed to the band colour above. */
+  --tint-accent:#E4E7FA;
+  --tint-ochre:#EFE8DA;
+  --tint-rust:#F2E4E1;
   --sans:Archivo,Helvetica,Arial,sans-serif;
   --mono:'IBM Plex Mono',monospace;
 
@@ -67,14 +71,22 @@ body{
   min-height:100vh;
 }
 
-/* Sections carry their own vertical rhythm; the horizontal edge is shared. */
-.hero,.bar,.meta,.grid,.more,.empty{padding-inline:var(--pad);}
+/* Sections carry their own vertical rhythm; the horizontal edge is shared.
+   The hero is absent on purpose: its gutter sits on its children instead, so the
+   bottom punch strip can span the full width without a negative margin. A
+   negative --pad would be wrong past --maxw anyway, because the percentage in it
+   would resolve against the strip's own box rather than the window. */
+.hero-top,.hero-mid,.hero-foot,.bar,.meta,.grid,.more,.empty{padding-inline:var(--pad);}
 footer{margin-inline:var(--pad);}
 
 /* ---------------------------------------------------------------- hero */
+/* The hero is one raffle ticket lying on the paper: punched down both sides and
+   along the bottom, with a tear-off stub beside the headline. */
 .hero{
+  position:relative;
+  overflow:hidden;
   background:var(--accent);
-  padding-block:20px 22px;
+  padding-block:24px 0;
   /* svh keeps the hero inside the visible area on a phone whose browser
      toolbar is still showing; vh first for engines without the newer units. */
   min-height:58vh;
@@ -82,6 +94,34 @@ footer{margin-inline:var(--pad);}
   display:flex;
   flex-direction:column;
 }
+
+/* The scallops are cut in paper, because paper is what's behind the ticket. */
+.punch{pointer-events:none;}
+.punch-left,.punch-right{
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:13px;
+  background-size:13px 24px;
+  background-repeat:repeat-y;
+}
+.punch-left{
+  left:0;
+  background-image:radial-gradient(circle at 0 11px,var(--paper) 7px,rgba(239,239,236,0) 7.5px);
+}
+.punch-right{
+  right:0;
+  background-image:radial-gradient(circle at 13px 11px,var(--paper) 7px,rgba(239,239,236,0) 7.5px);
+}
+/* In flow, after the stats — it has to push the hero's height, not overlay it.
+   There is deliberately no punch along the top. */
+.punch-bottom{
+  height:14px;
+  background-image:radial-gradient(circle at 11px 14px,var(--paper) 7px,rgba(239,239,236,0) 7.5px);
+  background-size:24px 14px;
+  background-repeat:repeat-x;
+}
+
 .hero-top{
   display:flex;
   justify-content:space-between;
@@ -98,53 +138,126 @@ footer{margin-inline:var(--pad);}
   border-bottom:1px solid rgba(16,16,20,.35);
 }
 
-.hero-mid{flex:1;display:flex;align-items:center;padding:44px 0 32px;}
-.hero-copy{display:flex;flex-direction:column;gap:26px;width:100%;}
+.hero-mid{flex:1;display:flex;align-items:center;padding-block:40px 30px;}
+.hero-row{
+  display:flex;
+  align-items:stretch;
+  gap:30px;
+  width:100%;
+  min-height:320px;
+}
+.hero-copy{display:flex;flex-direction:column;justify-content:center;gap:24px;flex:1;}
 h1{
   margin:0;
   font-weight:600;
-  font-size:clamp(52px,12vw,168px);
+  font-size:clamp(52px,11vw,140px);
   line-height:.84;
   letter-spacing:-.045em;
   text-transform:uppercase;
 }
-.deck{
+.deck{display:flex;flex-direction:column;gap:2px;max-width:66ch;}
+.deck p{
   margin:0;
-  max-width:52ch;
-  font-size:clamp(15px,1.5vw,19px);
+  font-size:17px;
   line-height:1.45;
   font-weight:400;
   text-wrap:pretty;
 }
 
+/* ------------------------------------------------------- tear-off stub */
+.stub{
+  position:relative;
+  width:172px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(16,16,20,.07);
+  border-left:2px dashed rgba(16,16,20,.5);
+}
+.tear{
+  position:relative;
+  background:var(--ink);
+  color:var(--paper);
+  border:0;
+  padding:26px 16px;
+  font-family:var(--mono);
+  font-size:12px;
+  letter-spacing:.3em;
+  text-transform:uppercase;
+  writing-mode:vertical-rl;
+  cursor:pointer;
+  transition:transform .45s cubic-bezier(.2,.9,.2,1),opacity .45s linear;
+}
+/* The arrow belongs to the horizontal bar the stub becomes on small screens. */
+.tear-arrow{display:none;}
+.stub.torn .tear{transform:translate(46px,120px) rotate(16deg);opacity:0;}
+
+/* Total entrants — the one figure the page doesn't otherwise show. */
+.reveal{
+  position:absolute;
+  writing-mode:vertical-rl;
+  white-space:nowrap;
+  font-family:var(--mono);
+  font-size:25px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  font-variant-numeric:tabular-nums;
+  text-transform:uppercase;
+  opacity:0;
+  transition:opacity .4s linear .18s;
+}
+.stub.torn .reveal{opacity:1;}
+.reveal strong{font-weight:inherit;letter-spacing:inherit;}
+/* "In the draw ·" is the horizontal bar's phrasing; the vertical stub has no room. */
+.reveal-lead{display:none;}
+
+/* --------------------------------------------------------- stat strip */
+/* The gutter lives here, not on .stats: the strip's ink background is what makes
+   the 1px gaps read as hairlines, and background paints under padding — so a
+   padded strip floods both gutters with black. Keeping the strip gutter-to-gutter
+   also stops its top rule running the full width of the window. */
+.hero-foot{display:flex;flex-direction:column;}
 .stats{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  grid-template-columns:repeat(3,1fr);
   gap:1px;
-  background:rgba(16,16,20,.28);
-  border-top:1px solid rgba(16,16,20,.28);
+  background:var(--ink);
+  border-top:1.5px solid var(--ink);
 }
 .stat{
   background:var(--accent);
-  padding:14px 0 2px 16px;
+  padding:20px 0 26px 20px;
   display:flex;
   flex-direction:column;
-  gap:6px;
+  gap:10px;
 }
 .stat:first-child{padding-left:0;}
-.stat-label{
-  font-family:var(--mono);
-  font-size:10px;
-  letter-spacing:.14em;
-  text-transform:uppercase;
-  opacity:.65;
-}
+/* Value first, label under it. */
 .stat-value{
   font-family:var(--mono);
-  font-size:clamp(20px,2.4vw,30px);
-  font-weight:500;
-  letter-spacing:-.02em;
+  font-size:60px;
+  font-weight:600;
+  line-height:.9;
+  letter-spacing:-.045em;
   font-variant-numeric:tabular-nums;
+}
+.stat-label{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  opacity:.7;
+}
+/* Only shown below 560px, where "Last update" leaves the grid for its own line. */
+.stat-line{
+  display:none;
+  background:var(--accent);
+  padding:9px 0 14px;
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  opacity:.7;
 }
 
 /* -------------------------------------------------------- control bar */
@@ -249,28 +362,62 @@ h1{
 .grid{
   padding-block:10px 80px;
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(212px,1fr));
-  column-gap:22px;
-  row-gap:0;
-}
-.card{
-  display:grid;
-  grid-row:span 5;
-  grid-template-rows:subgrid;
-  row-gap:0;
-  align-content:start;
+  grid-template-columns:repeat(auto-fill,minmax(232px,1fr));
+  gap:26px 22px;
 }
 
-/* The covers carry their own artwork; --band (set per card, see cardHtml) does
-   the odds colour-coding from the layout instead of washing over the image. */
-.cover{
+/* -------------------------------------------------------- ticket stub */
+/* Every ticket is one link to the enter page. Its height is fixed by the slot
+   below, so all tickets match without the subgrid this used to need.
+   --band is the odds colour; --field is the matching ticket tint. */
+.ticket{
   position:relative;
   display:block;
+  background:var(--field);
+  padding:30px 12px 17px;
+  color:var(--ink);
+  text-decoration:none;
+  transform-origin:50% 92%;
+  cursor:pointer;
+}
+.punch-t,.punch-b{
+  position:absolute;
+  left:0;
+  right:0;
+  height:11px;
+  background-size:18px 11px;
+  background-repeat:repeat-x;
+  pointer-events:none;
+}
+.punch-t{
+  top:0;
+  background-image:radial-gradient(circle at 9px 0,var(--paper) 5.5px,rgba(239,239,236,0) 6px);
+}
+.punch-b{
+  bottom:0;
+  background-image:radial-gradient(circle at 9px 11px,var(--paper) 5.5px,rgba(239,239,236,0) 6px);
+}
+
+/* nowrap so the longer hover label can't reflow the ticket. */
+.serial{
+  position:absolute;
+  top:11px;
+  left:14px;
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  color:var(--faint);
+}
+.serial-cta{display:none;}
+
+.cover{
+  position:relative;
+  display:flex;
   aspect-ratio:2/3;
   background:var(--tile);
   overflow:hidden;
-  text-decoration:none;
-  box-shadow:8px 8px 0 var(--band);
 }
 .cover img{
   width:100%;
@@ -279,18 +426,44 @@ h1{
   display:block;
 }
 
-.rank{
-  position:absolute;
-  top:0;
-  left:0;
-  background:var(--band);
-  color:var(--paper);
-  font-family:var(--mono);
-  font-size:10px;
-  letter-spacing:.08em;
-  padding:4px 7px;
-  font-variant-numeric:tabular-nums;
+/* Fixed height and bottom alignment are what keep the row identical: slack falls
+   above the title, so the perforation under it never moves. */
+.slot{
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  height:56px;
+  overflow:hidden;
+  margin-top:11px;
 }
+/* The character clip sizes the common case, but wrapping is not a function of
+   character count — at the grid's 232px floor a 50-character title still found a
+   third line, and a bottom-aligned slot shears the *first* line off the top.
+   Clamping guarantees the slot instead: any overrun ends in an ellipsis. */
+.title{
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  font-size:14.5px;
+  font-weight:500;
+  line-height:1.27;
+  letter-spacing:-.01em;
+  color:var(--ink);
+}
+.author{
+  display:-webkit-box;
+  -webkit-line-clamp:1;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  padding-top:2px;
+  font-size:12.5px;
+  line-height:1.3;
+  color:var(--muted);
+}
+
+.perf{display:block;margin:10px 0;border-top:1.5px dashed rgba(16,16,20,.32);}
+
 .nocover{
   width:100%;
   height:100%;
@@ -322,82 +495,29 @@ h1{
   margin-top:10px;
 }
 
-.title-wrap{
-  border-top:1px solid var(--ink);
-  padding-top:9px;
-  margin-top:18px;
-  align-self:start;
-}
-.title{
-  font-size:14.5px;
-  font-weight:500;
-  line-height:1.25;
-  letter-spacing:-.01em;
-  color:var(--ink);
-  text-decoration:none;
-  text-wrap:pretty;
-  display:-webkit-box;
-  -webkit-line-clamp:2;
-  -webkit-box-orient:vertical;
-  overflow:hidden;
-}
-
-.author-wrap{align-self:start;padding-top:3px;}
-.author{font-size:12.5px;color:var(--muted);line-height:1.3;}
-
 .figures{
-  margin-top:11px;
-  align-self:start;
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:8px 10px;
+  gap:9px 10px;
   font-family:var(--mono);
 }
-.cell{display:flex;flex-direction:column;gap:2px;}
+.cell{display:flex;flex-direction:column;gap:3px;}
 .cell-label{
   font-size:9px;
-  letter-spacing:.13em;
+  letter-spacing:.15em;
   text-transform:uppercase;
-  color:var(--faint);
+  color:var(--muted);
 }
-.cell-value{font-size:12.5px;font-variant-numeric:tabular-nums;}
+.cell-value{font-size:13px;font-variant-numeric:tabular-nums;}
 .cell-odds{
-  font-size:17px;
+  font-size:13px;
   font-weight:600;
-  letter-spacing:-.02em;
+  letter-spacing:-.03em;
   font-variant-numeric:tabular-nums;
   color:var(--band);
 }
 
-.enter-wrap{margin-top:12px;padding-bottom:38px;align-self:end;}
-.enter{
-  display:block;
-  text-align:center;
-  border:1px solid var(--ink);
-  padding:8px 0;
-  font-family:var(--mono);
-  font-size:10.5px;
-  letter-spacing:.14em;
-  text-transform:uppercase;
-  color:var(--ink);
-  text-decoration:none;
-}
-
-.skeleton{aspect-ratio:2/3;background:var(--tile);margin-bottom:38px;}
-
-/* Older engines without subgrid: keep the grid aligned rather than ragged. */
-@supports not (grid-template-rows:subgrid){
-  .card{display:flex;flex-direction:column;grid-row:auto;}
-  .title-wrap{min-height:47px;}
-  .author-wrap{min-height:20px;}
-  .author{
-    display:-webkit-box;
-    -webkit-line-clamp:1;
-    -webkit-box-orient:vertical;
-    overflow:hidden;
-  }
-  .enter-wrap{margin-top:auto;}
-}
+.skeleton{aspect-ratio:2/3;background:var(--tile);}
 
 /* ---------------------------------------------------- load more/empty */
 .more{
@@ -472,42 +592,96 @@ footer a{
 footer .legend{display:none;}
 
 /* --------------------------------------------------------- responsive */
-/* Below the width where four 140px stat cells fit, the strip wraps. Pin it to
-   2-up and keep the left column flush to the page gutter — the spec's
-   "first cell has no left padding" rule only covers the unwrapped case. */
-@media (max-width:619px){
-  .stats{grid-template-columns:repeat(2,1fr);}
-  .stat:nth-child(odd){padding-left:0;}
-}
-
 @media (max-width:640px){
   .meta-right{display:none;}
   footer .legend{display:flex;}
 }
 
-/* The spec requires 2 columns on phones ("do not drop to 1 column"), but
-   auto-fill with a 212px floor needs 446px of content width and a 480px phone
-   only has 424px. Pin 2 columns below the width where auto-fill would give a
-   third anyway (700px), so the handoff between the two rules is seamless. At
-   561-700px the gutter is still 28px and the gap 22px, so auto-fill would
-   independently give 2 columns from 502px up; below 561px the narrower gutter
-   and gap (see next block) mean this pin is what holds the second column. */
+/* The spec requires 2 columns on phones ("do not drop to 1 column"), and a 232px
+   floor needs 542px of window before auto-fill gives a second one. Pin 2 columns
+   below the width where auto-fill would give a third anyway (700px), so the
+   handoff between the two rules is seamless. */
 @media (max-width:700px){
   .grid{grid-template-columns:repeat(2,1fr);}
-  /* Half-size cards want a proportionally smaller offset. */
-  .cover{box-shadow:5px 5px 0 var(--band);}
+
+  /* A 172px vertical column cannot survive a phone, so the stub drops below the
+     headline as a full-bleed horizontal bar. The negative margin is safe here
+     because --pad only holds a percentage past --maxw, far above this rule. */
+  .hero-row{flex-direction:column;min-height:0;}
+  .stub{
+    width:auto;
+    margin-inline:calc(var(--pad) * -1);
+    padding-inline:var(--pad);
+    border-left:0;
+    border-top:2px dashed rgba(16,16,20,.5);
+    justify-content:stretch;
+  }
+  /* The padding belongs to the button, not the bar around it — otherwise the bar
+     looks 52px tall while the actual tap target is only the text. */
+  .tear{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    background:transparent;
+    color:var(--ink);
+    padding:16px 0;
+    min-height:52px;
+    writing-mode:horizontal-tb;
+    font-size:11px;
+    letter-spacing:.24em;
+    text-align:left;
+  }
+  .tear-arrow{display:inline;font-size:16px;letter-spacing:0;}
+  /* Swaps in place rather than tearing away — no room to throw it. */
+  .stub.torn .tear{transform:none;}
+  .reveal{
+    left:var(--pad);
+    writing-mode:horizontal-tb;
+    font-size:11px;
+    font-weight:400;
+    letter-spacing:.14em;
+  }
+  .reveal-lead{display:inline;}
+  .reveal strong{font-size:17px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
 }
 
 /* ------------------------------------------------------------ phones */
 @media (max-width:560px){
   :root{--gutter:20px;}
 
-  /* 58svh of a phone screen is more hero than anyone needs before the first
-     cover; the fixed vertical padding was the bulk of it, not the min-height. */
-  .hero{padding-block:16px 18px;min-height:52svh;}
-  .hero-mid{padding:26px 0 18px;}
+  /* The hero now carries a tear bar and a last-update line, so content sets its
+     height; min-height only guards a near-empty first paint. */
+  .hero{padding-block:16px 0;min-height:auto;}
+  .hero-mid{padding-block:0;}
   .hero-copy{gap:16px;}
-  h1{font-size:clamp(44px,13.5vw,168px);}
+  h1{font-size:clamp(44px,13.5vw,140px);line-height:.86;letter-spacing:-.04em;}
+  /* One sentence on a phone; the second is cut. */
+  .deck{max-width:none;}
+  .deck p{font-size:15px;}
+  .deck p + p{display:none;}
+  .stub{margin-top:20px;}
+
+  /* Hero punches shrink or the scallops eat the layout. */
+  .punch-left,.punch-right{width:9px;background-size:9px 16px;}
+  .punch-left{background-image:radial-gradient(circle at 0 8px,var(--paper) 4.5px,rgba(239,239,236,0) 5px);}
+  .punch-right{background-image:radial-gradient(circle at 9px 8px,var(--paper) 4.5px,rgba(239,239,236,0) 5px);}
+  .punch-bottom{
+    height:10px;
+    background-image:radial-gradient(circle at 8px 10px,var(--paper) 5px,rgba(239,239,236,0) 5.5px);
+    background-size:17px 10px;
+  }
+
+  /* Three 60px figures do not fit. Two go 2-up and "Last update" leaves the grid
+     for its own line — no cell, no rule. */
+  .stats{grid-template-columns:repeat(2,1fr);margin-top:20px;}
+  .stat{padding:14px 0 18px 14px;gap:6px;}
+  .stat:first-child{padding-left:0;}
+  .stat-updated{display:none;}
+  .stat-value{font-size:40px;}
+  .stat-label{font-size:10px;letter-spacing:.2em;}
+  .stat-line{display:block;}
 
   /* Six sort buttons and four chips wrapped to four rows, so the sticky bar ate
      39% of a 320px viewport. One scrollable row each is shorter *and* leaves
@@ -526,20 +700,46 @@ footer .legend{display:none;}
      saved. The clipped last button is the scroll affordance. */
   .sorts button,.chips button{white-space:nowrap;}
 
-  .grid{column-gap:16px;}
-  /* A 38px row gutter is out of proportion under a 132px card. The skeleton
-     fakes the same gutter with a margin, so it moves too. */
-  .enter-wrap{padding-bottom:28px;}
-  .skeleton{margin-bottom:28px;}
+  .grid{gap:20px 16px;}
 
-  /* "1 in 1,234" needs 99px and a half-column here is 74px, so the figure the
-     whole page is ranked by wrapped mid-phrase on 70% of rows. Give odds the
-     full card width at the top of the block; copies/entrants still pair. */
-  .cell--odds{grid-column:1 / -1;order:-1;}
+  /* The ticket internals shrink here rather than at 700px: between 561 and 700
+     the wider gutter and gap actually leave a 241px ticket — near the 232px
+     floor the desktop sizes are built for — so they only need to give at 560. */
+  .ticket{padding:24px 9px 13px;}
+  .punch-t,.punch-b{height:7px;background-size:12px 7px;}
+  .punch-t{background-image:radial-gradient(circle at 6px 0,var(--paper) 3.5px,rgba(239,239,236,0) 4px);}
+  .punch-b{background-image:radial-gradient(circle at 6px 7px,var(--paper) 3.5px,rgba(239,239,236,0) 4px);}
+  .serial{top:8px;left:10px;font-size:9px;}
+  .slot{height:48px;margin-top:9px;}
+  .title{font-size:13.5px;line-height:1.25;}
+  .author{font-size:11.5px;}
+  .perf{margin:9px 0;}
+  .figures{gap:8px;}
+  .cell-label{font-size:8px;letter-spacing:.14em;}
+  .cell-value,.cell-odds{font-size:12px;}
 
   /* Smallest sustained reading text in the design; 10.5px mono is too fine on
      a phone. A deliberate step away from the handoff's fixed size. */
   footer{font-size:11.5px;}
+}
+
+/* The figures stay the design's 2x2 on phones, but the two columns are not equal.
+   Measured at 375px: the odds value needs 75.2px at its widest ("1 in 15,292")
+   while the widest thing in the other column is the ENTRANTS label at 47.4px. An
+   even split gives each 65.8px, which is why the odds wrapped on 118 rows and the
+   ENTRANTS label collided with CLOSES. Weighting the columns 1.6:1 gives each
+   side what it actually needs and keeps a clean 2x2 down to ~357px. */
+@media (max-width:560px){
+  .figures{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);column-gap:10px;}
+}
+
+/* Narrower than any current iPhone (375px is the SE/mini floor) the 2x2 no longer
+   fits at full size, so the type gives a little rather than the layout — better a
+   slightly smaller figure on a 320px legacy screen than a stacked or ragged one. */
+@media (max-width:356px){
+  .cell-label{font-size:7.5px;letter-spacing:.06em;}
+  .cell-value{font-size:11px;}
+  .cell-odds{font-size:10px;}
 }
 
 /* Touch affordances are keyed to the pointer, not the width — a phone held in
@@ -549,47 +749,58 @@ footer .legend{display:none;}
   .search input{font-size:16px;}
   .sorts button{padding:10px;}
   .chips button{padding:9px 12px;}
-  .enter{padding:11px 0;}
 }
 
-/* Landscape phones. min-height was never the problem — a 12vw H1 plus 76px of
-   fixed vertical padding made the hero 118% of a 390px-tall viewport, so the
-   stat strip sat a full screen below the fold. */
+/* Landscape phones. min-height was never the problem — a tall headline plus fixed
+   vertical padding made the hero 118% of a 390px-tall viewport, so the stat strip
+   sat a full screen below the fold. */
 @media (max-height:520px) and (min-width:561px){
-  .hero{min-height:auto;padding-bottom:0;}
-  .hero-mid{padding:22px 0 18px;}
+  .hero{min-height:auto;}
+  .hero-mid{padding-block:22px 18px;}
+  .hero-row{min-height:0;}
   .hero-copy{gap:14px;}
-  h1{font-size:clamp(40px,7vw,168px);}
+  h1{font-size:clamp(40px,7vw,140px);}
 }
 
 @media (prefers-reduced-motion:no-preference){
-  .backlink,.title,.enter,.sorts button,.chips button,
+  .backlink,.title,.sorts button,.chips button,
   .btn-primary,.btn-secondary,footer a{
     transition:background-color .12s linear,color .12s linear,border-color .12s linear;
   }
-  .cover{transition:transform .12s linear,box-shadow .12s linear;}
+}
+
+/* The rock is the whole hover affordance — no shadow, no glow, no lift. */
+@keyframes tiltRock{
+  0%{transform:rotate(0)}
+  25%{transform:rotate(-1.5deg)}
+  75%{transform:rotate(1.5deg)}
+  100%{transform:rotate(0)}
 }
 
 /* Every hover state lives here, because a tap leaves :hover stuck on a touch
-   screen — an inverted sort button reads as selected until you tap elsewhere.
+   screen — a ticket would keep rocking after you lifted your finger.
    The aria-pressed styling stays outside: that is state, not hover. */
 @media (hover:hover){
   a:hover{color:var(--accent);}
   .backlink:hover{border-bottom-color:var(--ink);color:var(--ink);}
   .sorts button:hover{background:var(--tile);}
   .sorts button[aria-pressed="true"]:hover{background:var(--ink);color:var(--paper);}
-  .title:hover{color:var(--accent);}
-  .enter:hover{background:var(--ink);color:var(--paper);}
   .btn-primary:hover{background:var(--ink);color:var(--paper);}
   .btn-secondary:hover{border-color:var(--ink);color:var(--ink);}
   footer a:hover{color:var(--ink);}
 
-  /* The cover is the card's primary link, so give it a press to hover on:
-     shifting 3px into a shadow 3px shorter leaves the outer edge where it was. */
-  .card:hover .cover{
-    transform:translate(3px,3px);
-    box-shadow:5px 5px 0 var(--band);
-  }
+  .ticket:hover{animation:tiltRock 1.6s ease-in-out infinite;}
+  /* The serial doubles as the call to action once you're pointing at it. */
+  .ticket:hover .serial-num{display:none;}
+  .ticket:hover .serial-cta{display:inline;}
+}
+
+/* Scoped rather than the handoff's global `*{animation:none!important}`: that
+   would silently kill any future animation and, being animation-only, would miss
+   the tear-off entirely — which is a transition. */
+@media (prefers-reduced-motion:reduce){
+  .ticket:hover{animation:none;}
+  .tear,.reveal{transition:none;}
 }
 
 [hidden]{display:none !important;}
@@ -598,35 +809,50 @@ footer .legend{display:none;}
 <body>
 
 <section class="hero">
+  <span class="punch punch-left" aria-hidden="true"></span>
+  <span class="punch punch-right" aria-hidden="true"></span>
+
   <div class="hero-top">
     <a class="backlink" href="https://sabtainkhan.com">&larr; sabtainkhan.com</a>
   </div>
 
   <div class="hero-mid">
-    <div class="hero-copy">
-      <h1>Book Giveaways</h1>
-      <p class="deck">Every open Goodreads book giveaway in one place, ranked by the odds you'll actually win. Search it, sort it, enter the ones worth the click.</p>
+    <div class="hero-row">
+      <div class="hero-copy">
+        <h1>Book Giveaways</h1>
+        <div class="deck">
+          <p>Every open Goodreads book giveaway in one place, ranked by the odds you'll actually win.</p>
+          <p>Search it, sort it, enter the ones worth the click.</p>
+        </div>
+      </div>
+
+      <div class="stub" id="stub">
+        <button class="tear" id="tear" type="button" aria-pressed="false" aria-label="Tear off the stub">Tear here<span class="tear-arrow" aria-hidden="true">&rarr;</span></button>
+        <span class="reveal"><span class="reveal-lead">In the draw &middot; </span><strong id="stat-entrants">&mdash;</strong> entrants</span>
+      </div>
     </div>
   </div>
 
-  <div class="stats">
-    <div class="stat">
-      <span class="stat-label">Open now</span>
-      <span class="stat-value" id="stat-count">&mdash;</span>
+  <div class="hero-foot">
+    <div class="stats">
+      <div class="stat">
+        <span class="stat-value" id="stat-count">&mdash;</span>
+        <span class="stat-label">Open now</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="stat-copies">&mdash;</span>
+        <span class="stat-label">Copies</span>
+      </div>
+      <div class="stat stat-updated">
+        <span class="stat-value" id="stat-updated">&mdash;</span>
+        <span class="stat-label">Last update</span>
+      </div>
     </div>
-    <div class="stat">
-      <span class="stat-label">Copies on offer</span>
-      <span class="stat-value" id="stat-copies">&mdash;</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">Best odds</span>
-      <span class="stat-value" id="stat-best">&mdash;</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">Last update</span>
-      <span class="stat-value" id="stat-updated">&mdash;</span>
-    </div>
+    <!-- Below 560px "Last update" leaves the grid for this line instead. -->
+    <span class="stat-line">Last update &middot; <span id="stat-updated-line">&mdash;</span></span>
   </div>
+
+  <span class="punch punch-bottom" aria-hidden="true"></span>
 </section>
 
 <div class="bar">
@@ -688,6 +914,25 @@ footer .legend{display:none;}
   var PAGE_SIZE = window.matchMedia("(max-width:700px)").matches ? 36 : 60;
   var ACCENT = "#2F4BFF", OCHRE = "#A8761B", RUST = "#B03A2A", INK = "#101014";
 
+  // Each band's ticket field, keyed by the band colour.
+  var TINT = {};
+  TINT[ACCENT] = "#E4E7FA";
+  TINT[OCHRE]  = "#EFE8DA";
+  TINT[RUST]   = "#F2E4E1";
+
+  // The title/author slot is a fixed height, so the text has to be cut to fit
+  // rather than left to overflow — bottom-aligned, an overlong title loses its
+  // *first* line off the top. Narrow tickets need a harder cut.
+  var PHONE = window.matchMedia("(max-width:560px)");
+  function clipLimits() {
+    return PHONE.matches ? { title: 30, author: 24 } : { title: 52, author: 30 };
+  }
+
+  function clip(s, n) {
+    s = String(s == null ? "" : s);
+    return s.length > n ? s.slice(0, n - 1).replace(/[\s,;:.]+$/, "") + "…" : s;
+  }
+
   // dir is the direction that puts the most useful end first, so a fresh click
   // on a column lands on the answer people usually want; clicking the column
   // again flips it. asc/desc name each direction for the meta line and the
@@ -738,8 +983,11 @@ footer .legend{display:none;}
     chips: document.getElementById("chips"),
     statCount: document.getElementById("stat-count"),
     statCopies: document.getElementById("stat-copies"),
-    statBest: document.getElementById("stat-best"),
-    statUpdated: document.getElementById("stat-updated")
+    statUpdated: document.getElementById("stat-updated"),
+    statUpdatedLine: document.getElementById("stat-updated-line"),
+    statEntrants: document.getElementById("stat-entrants"),
+    stub: document.getElementById("stub"),
+    tear: document.getElementById("tear")
   };
 
   /* ------------------------------------------------------------ derive */
@@ -793,15 +1041,16 @@ footer .legend{display:none;}
     }).join(", ");
   }
 
-  // Slot widths the layout actually produces, measured across the range: below
-  // 560px a 20px gutter and a 16px column gap, to 700px a 28px gutter and a
-  // 22px gap. Past that auto-fill makes the card widest just before it adds a
-  // column — 321px at ~720px and 270px at ~1200px — then it settles under
-  // 240px once --maxw caps the row at seven. Understating any of these buys a
-  // cover too small for its slot, so each branch quotes the band's widest card.
-  var COVER_SIZES = "(max-width:560px) calc((100vw - 56px)/2), " +
-                    "(max-width:700px) calc((100vw - 78px)/2), " +
-                    "(max-width:1300px) 321px, 240px";
+  // Cover widths the layout actually produces. The cover is inset by the
+  // ticket's own padding (24px a side, 18px on a phone), so that comes off the
+  // column: below 560px a 20px gutter and a 16px gap, to 700px a 28px gutter and
+  // a 22px gap. Past that auto-fill makes the ticket widest just before it adds a
+  // column — ~358px in the two-column band and ~316px in the three — settling
+  // near 272px once --maxw caps the row. Understating any of these buys a cover
+  // too small for its slot, so each branch quotes the band's widest.
+  var COVER_SIZES = "(max-width:560px) calc((100vw - 56px)/2 - 18px), " +
+                    "(max-width:700px) calc((100vw - 78px)/2 - 24px), " +
+                    "(max-width:1050px) 336px, 272px";
 
   function esc(s) {
     return String(s == null ? "" : s)
@@ -811,8 +1060,6 @@ footer .legend{display:none;}
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
   }
-
-  function showUrl(g) { return "https://www.goodreads.com/giveaway/show/" + g.slug; }
 
   /* ----------------------------------------------------------- pipeline */
 
@@ -849,11 +1096,13 @@ footer .legend{display:none;}
 
   /* ------------------------------------------------------------- cards */
 
+  // The whole ticket is one link to the enter page — no separate button, and the
+  // detail page is deliberately not reachable from here.
   function cardHtml(g, i) {
     var o = odds(g);
     var h = hoursLeft(g);
     var color = band(o);
-    var url = esc(showUrl(g));
+    var lim = clipLimits();
     var title = esc(g.title);
     var full = g.cover ? esc(g.cover) : "";
     var small = g.cover ? esc(thumb(g.cover)) : "";
@@ -862,35 +1111,36 @@ footer .legend{display:none;}
       ? '<img src="' + small + '" srcset="' + esc(coverSrcset(g.cover)) + '" ' +
            'sizes="' + COVER_SIZES + '" data-full="' + full + '" alt="" ' +
            'loading="lazy" decoding="async" onerror="window.__coverFail(this)">'
-      : '<div class="nocover">' +
-          '<span class="nocover-title">' + title + '</span>' +
+      : '<span class="nocover">' +
+          '<span class="nocover-title">' + esc(clip(g.title, 60)) + '</span>' +
           '<span class="nocover-tag">No cover</span>' +
-        '</div>';
+        '</span>';
 
-    // --band is the odds colour: the cover shadow, the rank chip, the odds
-    // figure and the no-cover tile all read it off the card.
+    // --band is the odds colour (the odds figure and the no-cover tile read it);
+    // --field is the matching ticket tint.
     return '' +
-      '<article class="card" style="--band:' + color + '">' +
-        '<a class="cover" href="' + url + '" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true" ' +
-           'data-title="' + title + '">' +
-          coverInner +
-          '<span class="rank">' + String(i + 1).padStart(2, "0") + '</span>' +
-        '</a>' +
-        '<div class="title-wrap">' +
-          '<a class="title" href="' + url + '" target="_blank" rel="noopener" title="' + title + '">' + title + '</a>' +
-        '</div>' +
-        '<div class="author-wrap"><span class="author">' + esc(g.author) + '</span></div>' +
-        '<div class="figures">' +
-          '<div class="cell"><span class="cell-label">Copies</span><span class="cell-value">' + fmt(g.copies) + '</span></div>' +
-          '<div class="cell"><span class="cell-label">Entrants</span><span class="cell-value">' + fmt(g.entries) + '</span></div>' +
-          '<div class="cell cell--odds"><span class="cell-label">Odds</span><span class="cell-odds">' + oddsLabel(o) + '</span></div>' +
-          '<div class="cell"><span class="cell-label">Closes</span><span class="cell-value" style="color:' + (h < 48 ? RUST : INK) + '">' + clockLabel(h) + '</span></div>' +
-        '</div>' +
-        '<div class="enter-wrap">' +
-          '<a class="enter" href="' + esc(g.enterUrl) + '" target="_blank" rel="noopener" ' +
-             'aria-label="Enter giveaway for ' + title + '">Enter &rarr;</a>' +
-        '</div>' +
-      '</article>';
+      '<a class="ticket" href="' + esc(g.enterUrl) + '" target="_blank" rel="noopener" ' +
+         'style="--band:' + color + ';--field:' + TINT[color] + '" ' +
+         'aria-label="Enter the giveaway for ' + title + '">' +
+        '<span class="punch punch-t" aria-hidden="true"></span>' +
+        '<span class="punch punch-b" aria-hidden="true"></span>' +
+        '<span class="serial">' +
+          '<span class="serial-num">' + String(i + 1).padStart(2, "0") + '</span>' +
+          '<span class="serial-cta" aria-hidden="true">Click to enter &rarr;</span>' +
+        '</span>' +
+        '<span class="cover" data-title="' + title + '">' + coverInner + '</span>' +
+        '<span class="slot">' +
+          '<span class="title">' + esc(clip(g.title, lim.title)) + '</span>' +
+          '<span class="author">' + esc(clip(g.author, lim.author)) + '</span>' +
+        '</span>' +
+        '<span class="perf" aria-hidden="true"></span>' +
+        '<span class="figures">' +
+          '<span class="cell"><span class="cell-label">Copies</span><span class="cell-value">' + fmt(g.copies) + '</span></span>' +
+          '<span class="cell"><span class="cell-label">Entrants</span><span class="cell-value">' + fmt(g.entries) + '</span></span>' +
+          '<span class="cell cell--odds"><span class="cell-label">Odds</span><span class="cell-odds">' + oddsLabel(o) + '</span></span>' +
+          '<span class="cell"><span class="cell-label">Closes</span><span class="cell-value" style="color:' + (h < 48 ? RUST : INK) + '">' + clockLabel(h) + '</span></span>' +
+        '</span>' +
+      '</a>';
   }
 
   // Try the resized CDN variants, fall back to the original, then to the
@@ -908,11 +1158,11 @@ footer .legend{display:none;}
     var cover = img.parentNode;
     img.parentNode.removeChild(img);
 
-    var block = document.createElement("div");
+    var block = document.createElement("span");
     block.className = "nocover";
     var t = document.createElement("span");
     t.className = "nocover-title";
-    t.textContent = cover.getAttribute("data-title");
+    t.textContent = clip(cover.getAttribute("data-title"), 60);
     var tag = document.createElement("span");
     tag.className = "nocover-tag";
     tag.textContent = "No cover";
@@ -925,18 +1175,21 @@ footer .legend{display:none;}
 
   function renderStats() {
     if (!state.data.length) return;
-    var copies = 0, best = Infinity;
+    var copies = 0, entrants = 0;
     for (var i = 0; i < state.data.length; i++) {
       copies += state.data[i].copies;
-      var o = odds(state.data[i]);
-      if (o < best) best = o;
+      entrants += state.data[i].entries;
     }
     el.statCount.textContent = fmt(state.data.length);
     el.statCopies.textContent = fmt(copies);
-    el.statBest.textContent = isFinite(best) ? oddsLabel(best) : "—";
-    el.statUpdated.textContent = state.updated
+    // The stub's payoff: the one figure the page doesn't otherwise show.
+    el.statEntrants.textContent = fmt(entrants);
+
+    var when = state.updated
       ? new Date(state.updated).toLocaleDateString("en-US", { month: "short", day: "numeric" })
       : "—";
+    el.statUpdated.textContent = when;
+    el.statUpdatedLine.textContent = when;
   }
 
   function renderControls() {
@@ -963,7 +1216,7 @@ footer .legend{display:none;}
 
   function skeleton() {
     var out = "";
-    for (var i = 0; i < 12; i++) out += '<div class="skeleton"></div>';
+    for (var i = 0; i < 12; i++) out += '<span class="skeleton"></span>';
     return out;
   }
 
@@ -1114,6 +1367,17 @@ footer .legend{display:none;}
     state.limit = Infinity;
     render();
   });
+
+  // Tear the stub off to see the total entrant count. Toggles, not persisted.
+  el.tear.addEventListener("click", function () {
+    var torn = el.stub.classList.toggle("torn");
+    el.tear.setAttribute("aria-pressed", String(torn));
+  });
+
+  // The title clip is a character count, so it can't be a media query — re-render
+  // when the phone breakpoint flips, or a rotated phone keeps the wrong limit.
+  if (PHONE.addEventListener) PHONE.addEventListener("change", render);
+  else if (PHONE.addListener) PHONE.addListener(render);
 
   /* -------------------------------------------------------------- boot */
 
