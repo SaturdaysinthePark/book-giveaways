@@ -142,9 +142,24 @@ python3 tools/make-assets.py
 ```
 
 which shells out to headless Chrome (macOS path) and downsamples with Pillow.
-Rerun it after editing `favicon.svg` or `og.html`, and commit the PNGs; the site
-itself stays build-step free. The share card is deliberately static — no live
-counts — so nothing on it can go stale between scrapes.
+Both assets render at a multiple of their final size and get scaled down —
+the icon from a 512px master, the card at `--force-device-scale-factor=2` — so
+the punched scallops, the dashed perforation and the hairline gaps in the stat
+strip don't alias. Rerun it after editing `favicon.svg` or `og.html`, and commit
+the PNGs; the site itself stays build-step free.
+
+The card is the same raffle ticket as the hero, with the same tokens and the
+same radial-gradient scallops, scaled about 1.85x because a timeline shows it at
+a third of its size. Two deliberate departures from the hero: it is punched only
+down the right edge, where the stub is and where the ticket would actually be
+torn — punching all four turns it into a stamp — and its stub runs the full
+height, because a perforation that stops short reads as a panel rather than a
+tear line. Two details the hero has no room for: a nick bitten out of each end of
+the perforation, which is `favicon.svg`'s own geometry — a punched circle at each
+end of its dashed line — and the serial repeated on the stub, since the point of
+a stub is that both halves carry the number once it's torn. The card is also
+deliberately static — no live counts — so nothing on it can go stale between
+scrapes; the stat strip carries the three verbs instead.
 
 ### Other notes
 

@@ -29,10 +29,19 @@ ICON_MASTER = 512
 ICON_SIZES = {"favicon-16.png": 16, "favicon-32.png": 32, "apple-touch-icon.png": 180}
 
 OG_WIDTH, OG_HEIGHT = 1200, 630
+# The card is mostly curves now — a punched edge, the nicks at each end of the
+# perforation, hairline gaps in the stat strip — and all of them alias at 1x.
+# Same answer as the icons: render a 2x master and let Pillow do the downscale.
+# 2x is enough, because every value in og.html doubles to a whole device pixel.
+OG_SCALE = 2
 
 
-def shot(html_path, png_path, width, height):
-    """Screenshot a local HTML file at an exact viewport size."""
+def shot(html_path, png_path, width, height, scale=1):
+    """Screenshot a local HTML file at an exact viewport size.
+
+    width/height stay in CSS pixels; scale multiplies them into device pixels,
+    so the output is (width * scale) x (height * scale).
+    """
     if not pathlib.Path(CHROME).exists():
         sys.exit("Google Chrome not found at %s" % CHROME)
     subprocess.run(
@@ -41,7 +50,10 @@ def shot(html_path, png_path, width, height):
             "--headless",
             "--disable-gpu",
             "--hide-scrollbars",
-            "--force-device-scale-factor=1",
+            "--force-device-scale-factor=%d" % scale,
+            # The accent already lands on exact sRGB; this just stops a future
+            # Chrome tagging P3 on a wide-gamut Mac and shifting the blue.
+            "--force-color-profile=srgb",
             "--virtual-time-budget=8000",
             "--screenshot=%s" % png_path,
             "--window-size=%d,%d" % (width, height),
@@ -77,12 +89,17 @@ def render_icons(tmp):
 
 def render_og(tmp):
     out = tmp / "og.png"
-    shot(ROOT / "tools" / "og.html", out, OG_WIDTH, OG_HEIGHT)
+    shot(ROOT / "tools" / "og.html", out, OG_WIDTH, OG_HEIGHT, scale=OG_SCALE)
     img = Image.open(out).convert("RGB")
+    master = (OG_WIDTH * OG_SCALE, OG_HEIGHT * OG_SCALE)
+    if img.size != master:
+        img = img.crop((0, 0, min(img.width, master[0]), min(img.height, master[1])))
+    # Skipped if a Chrome ever ignores the scale flag and hands back 1x: the
+    # card is still correct at that point, only softer.
     if img.size != (OG_WIDTH, OG_HEIGHT):
-        img = img.crop((0, 0, OG_WIDTH, OG_HEIGHT))
+        img = img.resize((OG_WIDTH, OG_HEIGHT), Image.LANCZOS)
     img.save(PUBLIC / "og.png", optimize=True)
-    print("wrote public/og.png (%dx%d)" % img.size)
+    print("wrote public/og.png (%dx%d, from a %dx%d master)" % (img.size + master))
 
 
 def main():

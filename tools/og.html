@@ -4,8 +4,11 @@
 <meta charset="utf-8">
 <title>Book Giveaways — share card</title>
 <!-- Source for public/og.png (1200x630). Render with: python3 tools/make-assets.py
-     Same palette and type system as public/index.html: accent field, ink text,
-     Archivo for display, IBM Plex Mono for the labels. -->
+     One raffle ticket filling the canvas — the same object as the hero in
+     public/index.html: punched edges, a perforated stub, a hairline stat strip.
+     Every value is the hero's, scaled ~1.85x, because a timeline shows this card
+     about a third of its true size. Deliberately static: no live counts, so
+     nothing here can contradict the page between scrapes. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -16,7 +19,6 @@
   --accent:#2F4BFF;
   --sans:Archivo,Helvetica,Arial,sans-serif;
   --mono:'IBM Plex Mono',monospace;
-  --rule:rgba(16,16,20,.28);
 }
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
@@ -30,83 +32,217 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 .card{
-  width:100%;
+  position:relative;
+  width:1200px;
+  height:630px;
+}
+/* Everything left of the perforation. The right padding is the 224px stub plus
+   a 40px gap, so no line of type ever runs up against the dashes. */
+.body{
   height:100%;
-  padding:46px 64px 0;
   display:flex;
   flex-direction:column;
+  padding:46px 264px 0 96px;
 }
-.top{
+
+/* ------------------------------------------------------------ punched edge */
+/* Same technique as the hero: the scallops are cut in paper, because paper is
+   what's behind the ticket. Radius 13 over a 24px strip keeps the hero's 7/13,
+   and the 42px pitch divides the canvas exactly (630/42 = 15), so the edge ends
+   on a whole punch instead of a stranded half one.
+   Only the right edge, where the stub is: that is the edge the ticket is torn
+   along, and punching all four turns it into a stamp. The other three run off
+   the canvas the way the hero's top edge runs off the page.
+   Paper, never transparent: og.png is saved RGB and gets composited onto
+   whatever ground the platform has, so a transparent punch would go black. */
+.punch{position:absolute;pointer-events:none;}
+.punch-r{
+  top:0;
+  bottom:0;
+  right:0;
+  width:24px;
+  background-size:24px 42px;
+  background-repeat:repeat-y;
+  background-image:radial-gradient(circle at 24px 21px,var(--paper) 13px,rgba(239,239,236,0) 13.5px);
+}
+
+/* ----------------------------------------------------------------- top rail */
+/* Flush left, above the headline, the way .serial sits on the giveaway cards.
+   The serial format is the cards' too: String(i + 1).padStart(2, "0"). */
+.rail{
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  padding-bottom:26px;
-  border-bottom:1px solid var(--rule);
+  height:52px;
+  font-family:var(--mono);
+  font-size:19px;
+  font-weight:500;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  opacity:.75;
 }
-.ticket{width:104px;height:80px;display:block;}
+
+/* ---------------------------------------------------------------------- mid */
 .mid{
   flex:1;
   display:flex;
   flex-direction:column;
   justify-content:center;
-  gap:24px;
-  padding:22px 0;
+  gap:26px;
+  padding-block:40px 34px;
 }
 h1{
   margin:0;
   font-weight:600;
-  font-size:126px;
+  font-size:120px;
   line-height:.84;
   letter-spacing:-.045em;
   text-transform:uppercase;
 }
-.deck{
-  margin:0;
-  max-width:34ch;
-  font-size:30px;
-  line-height:1.35;
-  font-weight:400;
-}
-.bottom{
+/* Hard-broken rather than wrapped: the canvas is a fixed size, so the line
+   breaks may as well be fixed too. */
+.deck{margin:0;font-size:27px;line-height:1.35;font-weight:400;}
+
+/* -------------------------------------------------------- tear-off stub */
+/* Full height, unlike the hero's, where the stub is only as tall as the headline
+   row: a real stub is torn off the whole ticket, and at thumbnail size a
+   perforation that stops short reads as a panel rather than a tear line. It sits
+   under the punch strips — they come after it in the DOM — so the scallops eat
+   into the stub exactly as they do into the rest of the ticket. */
+.stub{
+  position:absolute;
+  top:0;
+  bottom:0;
+  right:0;
+  width:224px;
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  height:76px;
-  border-top:1px solid var(--rule);
+  justify-content:center;
+  /* The hero's stub field is .07, which shifts the accent by three units — fine
+     across the hero's width at full size, invisible on a card shown at a third
+     of it. .13 is the same idea, loud enough to survive the downscale. */
+  background:rgba(16,16,20,.13);
+  border-left:3px dashed rgba(16,16,20,.5);
+}
+/* A nick bitten out of each end of the perforation, the way a real ticket is
+   nicked so the tear starts cleanly. favicon.svg does the same thing — a punched
+   circle at each end of its dashed line — so this is the mark's own geometry.
+   Radius 13 is the scallops' radius: one die cut everything on the card. */
+.nick{
+  position:absolute;
+  left:964.5px;
+  width:26px;
+  height:13px;
+  pointer-events:none;
+}
+.nick-t{
+  top:0;
+  background-image:radial-gradient(circle at 13px 0,var(--paper) 13px,rgba(239,239,236,0) 13.5px);
+}
+.nick-b{
+  bottom:0;
+  background-image:radial-gradient(circle at 13px 13px,var(--paper) 13px,rgba(239,239,236,0) 13.5px);
+}
+/* The hero's ink chip, credit instead of "Tear here": a still image can't
+   honour the invitation to tear, but it can say where the ticket came from.
+   Padding is asymmetric because vertical-rl hangs the full .3em of tracking off
+   the last glyph — even padding would sit the word low in the chip. */
+/* The serial repeated on the stub — the whole point of a stub being that both
+   halves carry the same number once it's torn. Quieter than the one on the body
+   so it reads as a counterfoil rather than a second headline. */
+.stub-serial{
+  position:absolute;
+  top:44px;
+  left:50%;
+  transform:translateX(-50%);
+  writing-mode:vertical-rl;
   font-family:var(--mono);
-  font-size:16px;
+  font-size:15px;
   font-weight:500;
-  letter-spacing:.14em;
+  letter-spacing:.2em;
   text-transform:uppercase;
+  opacity:.45;
+}
+.chip{
+  background:var(--ink);
+  color:var(--paper);
+  padding:44px 22px 36px;
+  font-family:var(--mono);
+  font-size:19px;
+  font-weight:500;
+  letter-spacing:.3em;
+  text-transform:uppercase;
+  writing-mode:vertical-rl;
+}
+
+/* ----------------------------------------------------------- stat strip */
+/* The hero's construction exactly: accent cells over an ink background, so the
+   1px gaps read as hairlines. No numbers — the card is static, so the strip
+   carries the three verbs, which can't go stale. Their bottom padding is what
+   the bottom punch bites into, the same way it does under the hero's stats. */
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1px;
+  background:var(--ink);
+  border-top:2px solid var(--ink);
+}
+.stat{
+  background:var(--accent);
+  /* The bottom padding clears the punch strip: the labels would otherwise sit
+     8px off the scallops and read as if they were about to be bitten. */
+  padding:26px 0 48px 26px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.stat:first-child{padding-left:0;}
+.stat-value{
+  font-family:var(--mono);
+  font-size:52px;
+  font-weight:600;
+  line-height:.9;
+  letter-spacing:-.045em;
+  text-transform:uppercase;
+}
+.stat-label{
+  font-family:var(--mono);
+  font-size:13px;
+  font-weight:500;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  opacity:.7;
 }
 </style>
 </head>
 <body>
 
 <div class="card">
-  <div class="top">
-    <!-- Same mark as public/favicon.svg, minus its accent tile: the field is
-         already accent, so the ticket sits straight on it. -->
-    <svg class="ticket" viewBox="3 6 26 20" aria-hidden="true">
-      <rect x="3" y="7" width="26" height="18" rx="2.6" fill="#EFEFEC"/>
-      <circle cx="22.6" cy="7" r="2.1" fill="#2F4BFF"/>
-      <circle cx="22.6" cy="25" r="2.1" fill="#2F4BFF"/>
-      <path d="M22.6 10.8v10.4" stroke="#2F4BFF" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="1.9 2.2"/>
-      <g fill="#2F4BFF">
-        <path d="M5.8 12.7c2.4-1.5 4.6-1.3 6.1-.2v7.3c-1.5-1.1-3.7-1.3-6.1.2z"/>
-        <path d="M19.4 12.7c-2.4-1.5-4.6-1.3-6.1-.2v7.3c1.5-1.1 3.7-1.3 6.1.2z"/>
-      </g>
-    </svg>
+  <div class="body">
+    <div class="rail">
+      <span class="serial">Admit one &middot; No.&nbsp;01</span>
+    </div>
+
+    <div class="mid">
+      <h1>Book<br>Giveaways</h1>
+      <p class="deck">Every open Goodreads giveaway in one place,<br>ranked by the odds you'll actually win.</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span class="stat-value">Search</span><span class="stat-label">By title or author</span></div>
+      <div class="stat"><span class="stat-value">Sort</span><span class="stat-label">By odds or deadline</span></div>
+      <div class="stat"><span class="stat-value">Enter</span><span class="stat-label">On Goodreads</span></div>
+    </div>
   </div>
 
-  <div class="mid">
-    <h1>Book<br>Giveaways</h1>
-    <p class="deck">Goodreads book giveaways, now easier to filter, sort and search</p>
+  <div class="stub">
+    <span class="stub-serial">No.&nbsp;01</span>
+    <span class="chip">sabtainkhan.com</span>
   </div>
 
-  <div class="bottom">
-    <span>By sabtainkhan.com</span>
-  </div>
+  <!-- Last, so the scallops are punched through the stub above them. -->
+  <span class="punch punch-r" aria-hidden="true"></span>
+  <span class="nick nick-t" aria-hidden="true"></span>
+  <span class="nick nick-b" aria-hidden="true"></span>
 </div>
 
 </body>
