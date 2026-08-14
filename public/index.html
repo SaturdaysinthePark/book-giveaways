@@ -340,6 +340,54 @@ h1{
   color:var(--paper);
 }
 
+/* Sits in the chip row because that is what it is — one more filter — and on a
+   phone it rides the same scroller instead of adding a fourth row to the bar. */
+.genre{display:flex;align-items:center;position:relative;flex:0 0 auto;}
+.genre select{
+  appearance:none;
+  -webkit-appearance:none;
+  background:transparent;
+  color:var(--muted);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  /* Pinned because a select and a button resolve line-height:normal a pixel
+     apart, and this one sits in a row of buttons. */
+  line-height:1.3;
+  padding:6px 22px 6px 10px;
+  max-width:200px;
+  text-overflow:ellipsis;
+  cursor:pointer;
+}
+/* Pressed like a chip, because a chosen genre is an active filter. The flag is
+   on the wrapper, not the select, so the caret below can read it too. */
+.genre[data-on="true"] select{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:var(--paper);
+}
+/* Same move as the sort arrow: appearance:none takes the native marker, and a
+   glyph replaces it rather than an asset. On the wrapper, since a select
+   cannot carry ::after. */
+.genre::after{
+  content:"\25BE";
+  position:absolute;
+  right:9px;
+  top:50%;
+  margin-top:-5px;
+  font-size:8px;
+  line-height:1;
+  color:var(--muted);
+  pointer-events:none;
+}
+.genre[data-on="true"]::after{color:var(--paper);}
+/* The open list is drawn by the OS and takes uppercasing unevenly across
+   platforms, so the options keep the data's own casing. */
+.genre option{text-transform:none;color:var(--ink);background:var(--paper);}
+
 /* ---------------------------------------------------------- meta line */
 .meta{
   padding-block:14px 6px;
@@ -411,6 +459,22 @@ h1{
   color:var(--faint);
 }
 .serial-cta{display:none;}
+
+/* Mirrors .serial across the ticket's top band. Only ~13% of rows carry one, so
+   the corner is empty on most tickets and the badge reads as an exception. */
+.region{
+  position:absolute;
+  top:11px;
+  right:14px;
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  color:var(--faint);
+}
+/* Not enterable from the US, which is where nearly every entrant is. */
+.region-only{color:var(--rust);}
 
 .cover{
   position:relative;
@@ -580,7 +644,8 @@ footer{
   line-height:1.7;
   color:var(--muted);
 }
-footer .note{max-width:62ch;}
+/* Wide enough for the note to sit on one line; it still wraps on a phone. */
+footer .note{max-width:70ch;}
 footer a{
   color:var(--muted);
   text-decoration:none;
@@ -699,6 +764,9 @@ footer .legend{display:none;}
   /* Without this the chips wrap internally and grow taller than the row they
      saved. The clipped last button is the scroll affordance. */
   .sorts button,.chips button{white-space:nowrap;}
+  /* Longest option is "Historical fiction (138)"; cap it so the select can't
+     take the whole scroller and hide the chips behind it. */
+  .genre select{max-width:150px;}
 
   .grid{gap:20px 16px;}
 
@@ -710,6 +778,7 @@ footer .legend{display:none;}
   .punch-t{background-image:radial-gradient(circle at 6px 0,var(--paper) 3.5px,rgba(239,239,236,0) 4px);}
   .punch-b{background-image:radial-gradient(circle at 6px 7px,var(--paper) 3.5px,rgba(239,239,236,0) 4px);}
   .serial{top:8px;left:10px;font-size:9px;}
+  .region{top:8px;right:10px;font-size:8px;}
   .slot{height:48px;margin-top:9px;}
   .title{font-size:13.5px;line-height:1.25;}
   .author{font-size:11.5px;}
@@ -749,6 +818,11 @@ footer .legend{display:none;}
   .search input{font-size:16px;}
   .sorts button{padding:10px;}
   .chips button{padding:9px 12px;}
+  /* Padding only, matching the chips exactly. The 16px that would stop iOS
+     zooming on focus is not worth it here: it made the one select twice the
+     size of the four chips beside it, and the row reads as one set of filters
+     or it reads as nothing. */
+  .genre select{padding:9px 24px 9px 12px;}
 }
 
 /* Landscape phones. min-height was never the problem — a tall headline plus fixed
@@ -793,6 +867,16 @@ footer .legend{display:none;}
   /* The serial doubles as the call to action once you're pointing at it. */
   .ticket:hover .serial-num{display:none;}
   .ticket:hover .serial-cta{display:inline;}
+}
+
+/* Paired with the swap above. The CTA is ~117px of nowrap text against a ticket
+   of (100vw - 56px)/2, so the two close on each other as the window narrows:
+   measured, they still clear by 15px at a 420px window and overlap by 7px at
+   375px. Below that the call to action wins — a hovered ticket is one the
+   pointer is already committed to. Only a narrowed desktop window gets here; a
+   phone at the same width has a coarse pointer and never swaps in the CTA. */
+@media (hover:hover) and (max-width:420px){
+  .ticket:hover .region{display:none;}
 }
 
 /* Scoped rather than the handoff's global `*{animation:none!important}`: that
@@ -868,7 +952,15 @@ footer .legend{display:none;}
     <span class="sorts-label" id="sorts-label">Sort</span>
   </div>
 
-  <div class="chips" id="chips" role="group" aria-label="Filters"></div>
+  <div class="chips" id="chips" role="group" aria-label="Filters">
+    <label class="genre" id="genre-wrap">
+      <span class="sorts-label">Genre</span>
+      <!-- autocomplete=off for the same reason the search box has it: without it
+           the browser restores the last pick on reload and fires change, which
+           re-applies a genre the URL never asked for. -->
+      <select id="genre" autocomplete="off"><option value="">All genres</option></select>
+    </label>
+  </div>
 </div>
 
 <div class="meta">
@@ -895,7 +987,7 @@ footer .legend{display:none;}
 <div class="empty" id="empty" hidden></div>
 
 <footer>
-  <span class="note">Scraped from goodreads.com twice daily. Entrant counts are as of the last run, so treat odds as approximate &mdash; they move fast on popular titles. Entering is still a manual click on Goodreads; automated entries get disqualified under their terms.</span>
+  <span class="note">Entrant counts are updated here daily, so treat odds as approximate.</span>
   <div class="legend">
     <span><i style="background:#2F4BFF"></i>Short odds</span>
     <span><i style="background:#A8761B"></i>Middling</span>
@@ -967,6 +1059,7 @@ footer .legend{display:none;}
     sort: "odds",
     dir: sortSpec("odds").dir,
     filters: [],
+    genre: "",              // "" = every genre; otherwise one exact genre string
     limit: PAGE_SIZE
   };
 
@@ -981,6 +1074,8 @@ footer .legend{display:none;}
     search: document.getElementById("search"),
     sorts: document.getElementById("sorts"),
     chips: document.getElementById("chips"),
+    genre: document.getElementById("genre"),
+    genreWrap: document.getElementById("genre-wrap"),
     statCount: document.getElementById("stat-count"),
     statCopies: document.getElementById("stat-copies"),
     statUpdated: document.getElementById("stat-updated"),
@@ -1061,6 +1156,37 @@ footer .legend{display:none;}
       .replace(/'/g, "&#39;");
   }
 
+  // Only US and CA are in the data today, but the codes come straight off the
+  // Goodreads API, which promises neither a set nor an order. So the test is
+  // "not the board's default" rather than "is Canada": US-only rows earn no
+  // mark, and anything else names itself instead of quietly passing as US.
+  var COUNTRY_NAMES = { US: "the US", CA: "Canada" };
+
+  function countryTag(g) {
+    var list = g.countries || [];
+    if (!list.length) return null;
+    if (list.length === 1 && list[0] === "US") return null;
+
+    // US leads where it appears, because that is what the rest of the board is;
+    // the rest go alphabetical so the label doesn't move between scrapes.
+    var codes = list.slice().sort(function (a, b) {
+      if (a === b) return 0;
+      if (a === "US") return -1;
+      if (b === "US") return 1;
+      return a < b ? -1 : 1;
+    });
+    var names = codes.map(function (c) { return COUNTRY_NAMES[c] || c; });
+
+    // The badge is aria-hidden and the link's label carries the spoken half:
+    // "CA" is a fine 8px mark and a poor thing to hear.
+    return {
+      label: codes.length > 1 ? codes.join(" + ") : codes[0] + " only",
+      say: codes.length > 1
+        ? "open to " + names.slice(0, -1).join(", ") + " and " + names[names.length - 1]
+        : "open to " + names[0] + " only"
+    };
+  }
+
   /* ----------------------------------------------------------- pipeline */
 
   // All ascending. Direction is applied once, in visible(), by flipping the
@@ -1077,12 +1203,16 @@ footer .legend{display:none;}
 
   function visible() {
     var q = state.q.trim().toLowerCase();
+    var genre = state.genre;
     var active = FILTERS.filter(function (f) { return state.filters.indexOf(f.key) !== -1; });
 
     var rows = state.data.filter(function (g) {
       for (var i = 0; i < active.length; i++) {
         if (!active[i].test(g)) return false;
       }
+      // Membership, not position: a row carries one or two genres in no
+      // promised order. Ahead of the search because it's the cheaper test.
+      if (genre && (g.genres || []).indexOf(genre) === -1) return false;
       if (q && (g.title + " " + g.author).toLowerCase().indexOf(q) === -1) return false;
       return true;
     });
@@ -1106,6 +1236,11 @@ footer .legend{display:none;}
     var title = esc(g.title);
     var full = g.cover ? esc(g.cover) : "";
     var small = g.cover ? esc(thumb(g.cover)) : "";
+    var region = countryTag(g);
+    var regionHtml = region
+      ? '<span class="region' + (region.label.indexOf("US") === 0 ? "" : " region-only") + '" ' +
+           'aria-hidden="true">' + esc(region.label) + '</span>'
+      : "";
 
     var coverInner = g.cover
       ? '<img src="' + small + '" srcset="' + esc(coverSrcset(g.cover)) + '" ' +
@@ -1121,13 +1256,14 @@ footer .legend{display:none;}
     return '' +
       '<a class="ticket" href="' + esc(g.enterUrl) + '" target="_blank" rel="noopener" ' +
          'style="--band:' + color + ';--field:' + TINT[color] + '" ' +
-         'aria-label="Enter the giveaway for ' + title + '">' +
+         'aria-label="Enter the giveaway for ' + title + (region ? ", " + esc(region.say) : "") + '">' +
         '<span class="punch punch-t" aria-hidden="true"></span>' +
         '<span class="punch punch-b" aria-hidden="true"></span>' +
         '<span class="serial">' +
           '<span class="serial-num">' + String(i + 1).padStart(2, "0") + '</span>' +
           '<span class="serial-cta" aria-hidden="true">Click to enter &rarr;</span>' +
         '</span>' +
+        regionHtml +
         '<span class="cover" data-title="' + title + '">' + coverInner + '</span>' +
         '<span class="slot">' +
           '<span class="title">' + esc(clip(g.title, lim.title)) + '</span>' +
@@ -1212,6 +1348,10 @@ footer .legend{display:none;}
       var b = el.chips.querySelector('[data-filter="' + f.key + '"]');
       b.setAttribute("aria-pressed", String(state.filters.indexOf(f.key) !== -1));
     });
+    // Re-synced on every render, not only on change: a genre restored from the
+    // URL can't reach the select until its options exist, one render later.
+    el.genre.value = state.genre;
+    el.genreWrap.setAttribute("data-on", String(!!state.genre));
   }
 
   function skeleton() {
@@ -1281,6 +1421,7 @@ footer .legend{display:none;}
     // already shared keep meaning what they meant.
     if (state.dir !== sortSpec(state.sort).dir) p.set("dir", state.dir);
     if (state.filters.length) p.set("filters", state.filters.join(","));
+    if (state.genre) p.set("genre", state.genre);
     var qs = p.toString();
     history.replaceState(null, "", qs ? "?" + qs : location.pathname);
   }
@@ -1302,6 +1443,12 @@ footer .legend{display:none;}
       var known = FILTERS.map(function (f) { return f.key; });
       state.filters = filters.split(",").filter(function (k) { return known.indexOf(k) !== -1; });
     }
+
+    // Deliberately unvalidated here: the genre vocabulary lives in the data
+    // file, which hasn't been fetched yet. buildGenres() drops what it can't
+    // match.
+    var genre = p.get("genre");
+    if (genre) state.genre = genre;
   }
 
   /* ----------------------------------------------------------- wire up */
@@ -1317,7 +1464,35 @@ footer .legend{display:none;}
     FILTERS.forEach(function (f) {
       chipHtml += '<button type="button" data-filter="' + f.key + '" aria-pressed="false">' + f.label + '</button>';
     });
-    el.chips.innerHTML = chipHtml;
+    // beforeend, not innerHTML: the genre control is authored in the markup as
+    // the first thing in this row.
+    el.chips.insertAdjacentHTML("beforeend", chipHtml);
+  }
+
+  // Not part of buildControls(): that runs at boot, and the options are a fact
+  // about the data, which hasn't arrived yet.
+  function buildGenres() {
+    var counts = {};
+    state.data.forEach(function (g) {
+      (g.genres || []).forEach(function (name) {
+        counts[name] = (counts[name] || 0) + 1;
+      });
+    });
+    // Alphabetical rather than commonest-first: at 46 entries, finding the one
+    // you came for beats seeing the biggest, and the counts carry the size.
+    var names = Object.keys(counts).sort();
+
+    // Counts are of the whole board on purpose — recomputing them against the
+    // active chips would reshuffle the list under the pointer, mid-use.
+    var html = "";
+    names.forEach(function (n) {
+      html += '<option value="' + esc(n) + '">' + esc(n) + " (" + fmt(counts[n]) + ")</option>";
+    });
+    el.genre.insertAdjacentHTML("beforeend", html);
+
+    // A genre off the URL can only be checked now. Unknown ones fall back to
+    // all genres, the way readUrl() already ignores an unknown sort.
+    if (state.genre && names.indexOf(state.genre) === -1) state.genre = "";
   }
 
   // Anything that changes the result set resets the page size to 60.
@@ -1352,6 +1527,10 @@ footer .legend{display:none;}
       if (at === -1) state.filters.push(key);
       else state.filters.splice(at, 1);
     });
+  });
+
+  el.genre.addEventListener("change", function () {
+    change(function () { state.genre = el.genre.value; });
   });
 
   el.search.addEventListener("input", function () {
@@ -1402,6 +1581,9 @@ footer .legend{display:none;}
       state.data = d.giveaways || [];
       state.updated = d.updated;
       state.status = "ready";
+      // Before render(): renderControls() needs both the options and a genre
+      // that has been checked against them.
+      buildGenres();
       renderStats();
       render();
     })
