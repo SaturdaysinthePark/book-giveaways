@@ -1064,8 +1064,8 @@ footer .legend{display:none;}
     data: [],
     updated: null,
     q: "",
-    sort: "odds",
-    dir: sortSpec("odds").dir,
+    sort: "ending",
+    dir: sortSpec("ending").dir,
     filters: [],
     genre: "",              // "" = every genre; otherwise one exact genre string
     limit: PAGE_SIZE
@@ -1424,7 +1424,7 @@ footer .legend{display:none;}
   function syncUrl() {
     var p = new URLSearchParams();
     if (state.q) p.set("q", state.q);
-    if (state.sort !== "odds") p.set("sort", state.sort);
+    if (state.sort !== "ending") p.set("sort", state.sort);
     // Only when flipped away from the column's default, so links people have
     // already shared keep meaning what they meant.
     if (state.dir !== sortSpec(state.sort).dir) p.set("dir", state.dir);
