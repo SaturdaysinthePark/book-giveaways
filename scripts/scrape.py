@@ -60,7 +60,6 @@ query GetGiveaways($input: GetGiveawaysInput!, $pagination: PaginationInput) {
         details {
           numCopiesAvailable
           numEntrants
-          enterGiveawayUrl
           format
           genres { name }
           book {
@@ -136,7 +135,9 @@ def flatten(node):
         "cover": book.get("imageUrl"),
         "copies": d["numCopiesAvailable"],
         "entries": d["numEntrants"],
-        "enterUrl": "https://www.goodreads.com" + d["enterGiveawayUrl"],
+        # The show page (not the login-gated enter_choose_address flow) so
+        # logged-out visitors can still see the book before entering.
+        "enterUrl": node["webUrl"],
         "genres": [g["name"] for g in d.get("genres") or []],
         "countries": [c["countryCode"] for c in node["metadata"].get("countries") or []],
         "starts": node["metadata"]["startDate"][:10],
