@@ -466,7 +466,7 @@ h1{
   white-space:nowrap;
   color:var(--faint);
 }
-.serial-cta{display:none;}
+.serial-cta{display:none;font-size:8.5px;}
 
 /* Mirrors .serial across the ticket's top band. Only ~13% of rows carry one, so
    the corner is empty on most tickets and the badge reads as an exception. */
@@ -786,6 +786,7 @@ footer .legend{display:none;}
   .punch-t{background-image:radial-gradient(circle at 6px 0,var(--paper) 3.5px,rgba(239,239,236,0) 4px);}
   .punch-b{background-image:radial-gradient(circle at 6px 7px,var(--paper) 3.5px,rgba(239,239,236,0) 4px);}
   .serial{top:8px;left:10px;font-size:9px;}
+  .serial-cta{font-size:7.5px;}
   .region{top:8px;right:10px;font-size:8px;}
   .slot{height:48px;margin-top:9px;}
   .title{font-size:13.5px;line-height:1.25;}
@@ -1016,9 +1017,9 @@ footer .legend{display:none;}
 
   // Each band's ticket field, keyed by the band colour.
   var TINT = {};
-  TINT[ACCENT] = "#E4E7FA";
-  TINT[OCHRE]  = "#EFE8DA";
-  TINT[RUST]   = "#F2E4E1";
+  TINT[ACCENT] = "#D6D9EC";
+  TINT[OCHRE]  = "#E1DACC";
+  TINT[RUST]   = "#E4D6D3";
 
   // The title/author slot is a fixed height, so the text has to be cut to fit
   // rather than left to overflow — bottom-aligned, an overlong title loses its
