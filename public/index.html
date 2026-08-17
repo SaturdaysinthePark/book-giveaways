@@ -1056,7 +1056,13 @@ footer .legend{display:none;}
     { key: "closing",    label: "Closing in 48h",        test: function (g) { return hoursLeft(g) <= 48; } },
     { key: "longodds",   label: "Better than 1 in 500",  test: function (g) { return odds(g) <= 500; } },
     { key: "manycopies", label: "10+ copies",            test: function (g) { return g.copies >= 10; } },
-    { key: "fresh",      label: "Under 2,000 entrants",  test: function (g) { return g.entries < 2000; } }
+    { key: "fresh",      label: "Under 2,000 entrants",  test: function (g) { return g.entries < 2000; } },
+    // Inverted sense from the others: every other chip narrows the set when
+    // pressed (resting state = no restriction). This one widens it — resting
+    // state = closed giveaways excluded. visible() special-cases the key
+    // instead of calling .test(), since there's no "no restriction" reading
+    // for it.
+    { key: "closed",     label: "Show closed",           test: null }
   ];
 
   var state = {
@@ -1212,9 +1218,16 @@ footer .legend{display:none;}
   function visible() {
     var q = state.q.trim().toLowerCase();
     var genre = state.genre;
-    var active = FILTERS.filter(function (f) { return state.filters.indexOf(f.key) !== -1; });
+    // "closed" doesn't narrow like the rest — it's excluded by default, and
+    // the chip widens the set back out — so it's pulled out of the generic
+    // AND loop below and applied as a default exclusion instead.
+    var showClosed = state.filters.indexOf("closed") !== -1;
+    var active = FILTERS.filter(function (f) {
+      return f.key !== "closed" && state.filters.indexOf(f.key) !== -1;
+    });
 
     var rows = state.data.filter(function (g) {
+      if (!showClosed && hoursLeft(g) < 0) return false;
       for (var i = 0; i < active.length; i++) {
         if (!active[i].test(g)) return false;
       }
@@ -1319,12 +1332,17 @@ footer .legend{display:none;}
 
   function renderStats() {
     if (!state.data.length) return;
-    var copies = 0, entrants = 0;
+    // "Open now" is the label, so the tally excludes closed rows — same
+    // hoursLeft(g) < 0 predicate visible() uses for the default chip state.
+    var copies = 0, entrants = 0, openCount = 0;
     for (var i = 0; i < state.data.length; i++) {
-      copies += state.data[i].copies;
-      entrants += state.data[i].entries;
+      var g = state.data[i];
+      if (hoursLeft(g) < 0) continue;
+      openCount++;
+      copies += g.copies;
+      entrants += g.entries;
     }
-    el.statCount.textContent = fmt(state.data.length);
+    el.statCount.textContent = fmt(openCount);
     el.statCopies.textContent = fmt(copies);
     // The stub's payoff: the one figure the page doesn't otherwise show.
     el.statEntrants.textContent = fmt(entrants);
