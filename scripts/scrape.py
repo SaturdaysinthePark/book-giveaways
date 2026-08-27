@@ -33,7 +33,10 @@ ENDPOINT = "https://kxbwmqov6jgg3daaamb744ycu4.appsync-api.us-east-1.amazonaws.c
 
 # Public client key lifted from the page bundle. It will rotate on some future
 # Goodreads deploy; discover_api_key() below re-finds it when that happens.
-API_KEY = "da2-xpgsdydkbregjhpr6ejzqdhuwy"
+# Refreshed 2026-08-27 after a rotation discover_api_key() failed to follow
+# (it started 401ing on the old key but came up empty re-scanning the bundle
+# — see the 2026-08-27T17:18 "Refresh giveaways" run). Root cause still open.
+API_KEY = "da2-d2fyuybwsbf3poyquvbp2mbiwu"
 
 PAGE_SIZE = 15          # server-enforced ceiling
 DELAY = 1.0
