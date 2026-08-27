@@ -7,7 +7,9 @@ hits that GraphQL endpoint directly — no HTML parsing, no login, no cookies.
 
 Verified against the live API:
   - endpoint    kxbwmqov6jgg3daaamb744ycu4.appsync-api.us-east-1.amazonaws.com
-  - auth        public x-api-key baked into the client bundle (no session needed)
+  - auth        public x-api-key, no session needed (as of 2026-08 it ships
+                inline in the giveaway page's __NEXT_DATA__ JSON, not baked
+                into a JS chunk -- see discover_api_key())
   - page size   server caps at 15 regardless of what you ask for
   - pagination  opaque cursor: pageInfo.nextPageToken -> pagination.after
   - total       1,364 open print giveaways, so ~91 requests per full run
@@ -101,14 +103,26 @@ def probe(session, key):
 
 
 def discover_api_key(session):
-    """Re-find the public key from the page bundle if the hardcoded one 401s."""
+    """Re-find the public key if the hardcoded one 401s.
+
+    As of 2026-08, Goodreads ships the key inline in the page's own
+    __NEXT_DATA__ JSON (pageProps.apiKey) rather than baked into a static JS
+    chunk -- checked first since it's already in hand from the page fetch.
+    Falls back to scanning the JS bundles in case that moves again.
+    """
     html = session.get("https://www.goodreads.com/giveaway", timeout=20).text
+
+    for key in re.findall(r"da2-[a-z0-9]{26}", html):
+        if probe(session, key):
+            return key
+
     for src in re.findall(r'src="(/_next/static/[^"]+\.js)"', html):
         js = session.get("https://www.goodreads.com" + src, timeout=20).text
         for key in re.findall(r"da2-[a-z0-9]{26}", js):
             if probe(session, key):
                 return key
-    raise RuntimeError("could not find a working API key in the page bundle")
+
+    raise RuntimeError("could not find a working API key on the page or in its bundles")
 
 
 def fetch_page(session, key, after):
