@@ -109,14 +109,40 @@ def discover_api_key(session):
     __NEXT_DATA__ JSON (pageProps.apiKey) rather than baked into a static JS
     chunk -- checked first since it's already in hand from the page fetch.
     Falls back to scanning the JS bundles in case that moves again.
-    """
-    html = session.get("https://www.goodreads.com/giveaway", timeout=20).text
 
-    for key in re.findall(r"da2-[a-z0-9]{26}", html):
+    Prints diagnostics to stderr so a future failure is readable straight
+    from the Action log -- what status/length the page fetch actually got
+    back and how many key candidates each strategy found -- instead of
+    needing another round of manual browser captures to see what happened.
+    """
+    # A browser-realistic header set for just this one request. The
+    # session's default User-Agent ("giveaway-board/0.2 ...") is honest
+    # about being a script, which is fine for the GraphQL calls below but
+    # may be exactly what gets this particular page fetch bot-filtered.
+    page_headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+        ),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+    }
+    r = session.get("https://www.goodreads.com/giveaway", headers=page_headers, timeout=20)
+    html = r.text
+
+    inline_candidates = re.findall(r"da2-[a-z0-9]{26}", html)
+    bundle_srcs = re.findall(r'src="(/_next/static/[^"]+\.js)"', html)
+    print(
+        f"discover_api_key: page fetch status={r.status_code} len={len(html)} "
+        f"inline_candidates={len(inline_candidates)} bundle_srcs={len(bundle_srcs)}",
+        file=sys.stderr,
+    )
+
+    for key in inline_candidates:
         if probe(session, key):
             return key
 
-    for src in re.findall(r'src="(/_next/static/[^"]+\.js)"', html):
+    for src in bundle_srcs:
         js = session.get("https://www.goodreads.com" + src, timeout=20).text
         for key in re.findall(r"da2-[a-z0-9]{26}", js):
             if probe(session, key):
